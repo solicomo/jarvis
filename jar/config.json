@@ -1,24 +1,56 @@
 {
 	"ID": "auto",
-	"ListenType": "tcp",
+	"ListenType": "http",
 	"ListenAddr": "0.0.0.0:8080",
 	"ServerType": "tcp",
 	"ServerAddr": "192.168.1.100:8081",
 	"Metrics": {
-		"OSVer": "call:OSVer",
-		"Uptime": "call:Uptime",
-		"Load": "call:Load",
-		"CPUName": "call:CPUName",
-		"CPUCore": "call:CPUCore",
-		"CPURate": "call:CPURate",
-		"MemSize": "call:MemSize",
-		"MemRate": "call:MemRate",
-		"SwapRate": "call:SwapRate",
-		"DiskSize": "call:DiskSize",
-		"DiskRead": "call:DiskRead",
-		"DiskWrite": "call:DiskWrite",
-		"NetRead": "call:NetRead",
-		"NetWrite": "call:NetWrite",
-		"SayHi": "http://192.168.1.100:8080/detector/sayhi.py"
+		"OSVer": {
+			"Detector": "call:OSVer",
+			"Params": [true, "s"]
+		},
+		"Uptime": {
+			"Detector": "call:Uptime"
+		},
+		"Load": {
+			"Detector": "call:Load"
+		},
+		"CPUName": {
+			"Detector": "call:CPUName"
+		},
+		"CPUCore": {
+			"Detector": "call:CPUCore"
+		},
+		"CPURate": {
+			"Detector": "call:CPURate"
+		},
+		"MemSize": {
+			"Detector": "call:MemSize"
+		},
+		"MemRate": {
+			"Detector": "call:MemRate"
+		},
+		"SwapRate": {
+			"Detector": "call:SwapRate"
+		},
+		"DiskSize": {
+			"Detector": "call:DiskSize"
+		},
+		"DiskRead": {
+			"Detector": "call:DiskRead"
+		},
+		"DiskWrite": {
+			"Detector": "call:DiskWrite"
+		},
+		"NetRead": {
+			"Detector": "call:NetRead"
+		},
+		"NetWrite": {
+			"Detector": "call:NetWrite"
+		},
+		"SayHi": {
+			"Detector": "http://192.168.1.100:8080/detector/sayhi.py",
+			"MD5": ""
+		}
 	}
 }

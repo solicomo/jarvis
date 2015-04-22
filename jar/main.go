@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"log/syslog"
 	"os"
 	"path"
 )
@@ -22,8 +21,8 @@ func main() {
 	appName := path.Base(os.Args[0])
 
 	// log
-	// Configure logger to write to the syslog.
-	logWriter, err := syslog.New(syslog.LOG_NOTICE, appName)
+	logFile := path.Clean(*root + "/" + appName + ".log")
+	logWriter, err := os.OpenFile(logFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 
 	if err != nil {
 		fmt.Println(err)
@@ -32,7 +31,7 @@ func main() {
 	defer logWriter.Close()
 
 	log.SetOutput(logWriter)
-	log.SetFlags(0)
+	log.SetFlags(log.LstdFlags)
 
 	var jar Jar
 	err = jar.Init(*root, appName)

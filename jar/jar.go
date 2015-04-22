@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 type MetricConfig struct {
@@ -83,27 +85,32 @@ func (j *Jar) initConfig() (err error) {
 
 func (j *Jar) Run() {
 
-	for {
+	ticker := time.Tick(3 * time.Minute)
+	for _ = range ticker {
+
 		var stat Stat
 		stat.ID = j.config.ID
 		stat.Metrics = make(map[string]Metric)
 
 		for name, metric := range j.config.Metrics {
-			stat.Metrics[name].Chan = make(chan string)
+			stat.Metrics[name] = Metric{"", make(chan string)}
 
 			go func(sch chan string) {
 				detector := <-sch
 				var value string
+
 				//TODO:
-				value = "val"
+				value = detector
+
 				sch <- value
 			}(stat.Metrics[name].Chan)
 
 			stat.Metrics[name].Chan <- metric.Detector
 		}
 
-		for name, metric := range stat.Metrics {
+		for _, metric := range stat.Metrics {
 			metric.Value = <-metric.Chan
+			fmt.Println(metric.Value)
 		}
 
 		statData, err := json.MarshalIndent(stat, "", "\t")
@@ -114,6 +121,7 @@ func (j *Jar) Run() {
 		}
 
 		_, err = http.Post(j.config.ServerType+"://"+j.config.ServerAddr+"/report", "application/json; charset=utf-8", bytes.NewReader(statData))
+		//_, err = os.Stderr.Write(statData)
 
 		if err != nil {
 			log.Println("[ERRO]", err)

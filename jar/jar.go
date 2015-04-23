@@ -7,7 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
+
+	"jarvis/jar/detector"
 )
 
 type MetricConfig struct {
@@ -25,14 +28,14 @@ type Config struct {
 	Metrics    map[string]MetricConfig
 }
 
-type Metric struct {
-	Value string
-	Chan  chan string `json:"-"`
+type MetricChan struct {
+	Metric chan string
+	Config chan MetricConfig
 }
 
 type Stat struct {
 	ID      string
-	Metrics map[string]Metric
+	Metrics map[string]string
 }
 
 type Jar struct {
@@ -68,17 +71,17 @@ func (j *Jar) initConfig() (err error) {
 		return
 	}
 
-	if j.config.ID == "auto" {
+	if len(j.config.ID) == 0 {
+		j.config.ID = "auto" //TODO:
 
+		configData, err = json.MarshalIndent(j.config, "", "\t")
+
+		if err != nil {
+			return
+		}
+
+		err = ioutil.WriteFile(configFile, configData, 0644)
 	}
-
-	configData, err = json.MarshalIndent(j.config, "", "\t")
-
-	if err != nil {
-		return
-	}
-
-	err = ioutil.WriteFile(configFile, configData, 0644)
 
 	return
 }
@@ -88,29 +91,26 @@ func (j *Jar) Run() {
 	ticker := time.Tick(3 * time.Minute)
 	for _ = range ticker {
 
+		metricCount := len(j.config.Metrics)
+
 		var stat Stat
 		stat.ID = j.config.ID
-		stat.Metrics = make(map[string]Metric)
+		stat.Metrics = make(map[string]string, metricCount)
 
-		for name, metric := range j.config.Metrics {
-			stat.Metrics[name] = Metric{"", make(chan string)}
+		chans := make(map[string]MetricChan, metricCount)
 
-			go func(sch chan string) {
-				detector := <-sch
-				var value string
+		for name, config := range j.config.Metrics {
+			chans[name] = MetricChan{make(chan string), make(chan MetricConfig)}
 
-				//TODO:
-				value = detector
+			go j.detect(chans[name].Config, chans[name].Metric)
 
-				sch <- value
-			}(stat.Metrics[name].Chan)
-
-			stat.Metrics[name].Chan <- metric.Detector
+			chans[name].Config <- config
+			chans[name].Metric <- name
 		}
 
-		for _, metric := range stat.Metrics {
-			metric.Value = <-metric.Chan
-			fmt.Println(metric.Value)
+		for name, metricChan := range chans {
+			stat.Metrics[name] = <-metricChan.Metric
+			fmt.Println(stat.Metrics[name])
 		}
 
 		statData, err := json.MarshalIndent(stat, "", "\t")
@@ -128,4 +128,22 @@ func (j *Jar) Run() {
 		}
 	}
 
+}
+
+func (j *Jar) detect(configChan chan MetricConfig, metricChan chan string) {
+
+	metricConf := <-configChan
+	metric := <-metricChan
+
+	if strings.HasPrefix(metricConf.Detector, "call:") {
+		funcName := strings.TrimPrefix(metricConf.Detector, "call:")
+
+		var err error
+		metric, err = detector.Call(funcName, metricConf.Params)
+		if err != nil {
+			metric = err.Error()
+		}
+	}
+
+	metricChan <- metric
 }

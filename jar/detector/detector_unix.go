@@ -2,18 +2,28 @@
 
 package detector
 
-func (Detector) OSVer(params []string) (result string, err error) {
+import (
+	"strings"
+	"syscall"
+	"unsafe"
+)
+
+func int8ToString(bs []int8) string {
+	return strings.TrimRight(string(*(*[]byte)(unsafe.Pointer(&bs))), "\x00")
+}
+
+func (Detector) OSVer(params ...string) (result string, err error) {
 	var u syscall.Utsname
 	if err = syscall.Uname(&u); err != nil {
 		return
 	}
 
-	sysName := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
-	nodName := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
-	release := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
-	version := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
-	machine := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
-	domName := string(u.Sysname[:bytes.IndexByte(u.Sysname, 0)])
+	sysName := int8ToString(u.Sysname[:])
+	nodName := int8ToString(u.Nodename[:])
+	release := int8ToString(u.Release[:])
+	version := int8ToString(u.Version[:])
+	machine := int8ToString(u.Machine[:])
+	domName := int8ToString(u.Domainname[:])
 
 	if len(params) == 0 {
 		result = sysName + " " + nodName + " " + release + " " + version + " " + machine + " " + domName

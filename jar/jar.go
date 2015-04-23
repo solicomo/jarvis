@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -88,7 +88,7 @@ func (j *Jar) initConfig() (err error) {
 
 func (j *Jar) Run() {
 
-	ticker := time.Tick(3 * time.Minute)
+	ticker := time.Tick(3 * time.Second)
 	for _ = range ticker {
 
 		metricCount := len(j.config.Metrics)
@@ -110,7 +110,6 @@ func (j *Jar) Run() {
 
 		for name, metricChan := range chans {
 			stat.Metrics[name] = <-metricChan.Metric
-			fmt.Println(stat.Metrics[name])
 		}
 
 		statData, err := json.MarshalIndent(stat, "", "\t")
@@ -121,7 +120,7 @@ func (j *Jar) Run() {
 		}
 
 		_, err = http.Post(j.config.ServerType+"://"+j.config.ServerAddr+"/report", "application/json; charset=utf-8", bytes.NewReader(statData))
-		//_, err = os.Stderr.Write(statData)
+		_, err = os.Stderr.Write(statData)
 
 		if err != nil {
 			log.Println("[ERRO]", err)
@@ -143,6 +142,8 @@ func (j *Jar) detect(configChan chan MetricConfig, metricChan chan string) {
 		if err != nil {
 			metric = err.Error()
 		}
+	} else {
+		metric = "Not supported yet."
 	}
 
 	metricChan <- metric

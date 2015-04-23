@@ -2,12 +2,12 @@
 	"ID": "auto",
 	"ListenType": "http",
 	"ListenAddr": "0.0.0.0:8080",
-	"ServerType": "tcp",
-	"ServerAddr": "192.168.1.100:8081",
+	"ServerType": "http",
+	"ServerAddr": "127.0.0.1:8081",
 	"Metrics": {
 		"OSVer": {
 			"Detector": "call:OSVer",
-			"Params": [true, "s"]
+			"Params": ["s", "r", "m", "n"]
 		},
 		"Uptime": {
 			"Detector": "call:Uptime"

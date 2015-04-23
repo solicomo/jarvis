@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"net/http"
 )
 
 func main() {
@@ -15,14 +17,13 @@ func main() {
 	}))
 
 	m.Post("/report", func(req *http.Request) {
-		var postData []byte
-		n, err := req.Body.Read(postData)
+		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(string(postData[:n]))
+		fmt.Println(string(body[:]))
 	})
 
-	m.RunOnAddr(":8080")
+	m.RunOnAddr(":8081")
 }

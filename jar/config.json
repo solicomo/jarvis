@@ -36,6 +36,9 @@
 		"DiskSize": {
 			"Detector": "call:DiskSize"
 		},
+		"DiskRate": {
+			"Detector": "call:DiskRate"
+		},
 		"DiskRead": {
 			"Detector": "call:DiskRead"
 		},

@@ -4,6 +4,7 @@ package detector
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"syscall"
 	"unsafe"

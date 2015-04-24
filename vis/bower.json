@@ -1,0 +1,28 @@
+{
+  "name": "Jarvis",
+  "version": "0.0.0",
+  "homepage": "https://github.com/solicomo/jarvis",
+  "authors": [
+    "Soli <soli@cbug.org>"
+  ],
+  "description": "J.A.R.V.I.S",
+  "main": "vis.go",
+  "keywords": [
+    "Jarvis",
+    "Jar",
+    "Vis"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/static/vendor",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "font-awesome": "~4.3.0",
+    "bootstrap": "~3.3.4"
+  }
+}

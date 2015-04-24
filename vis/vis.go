@@ -9,6 +9,17 @@ import (
 	"github.com/martini-contrib/render"
 )
 
+type Config struct {
+	ListenType string
+	ListenAddr string
+}
+
+type Vis struct {
+	root    string
+	appName string
+	config  Config
+}
+
 func main() {
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{

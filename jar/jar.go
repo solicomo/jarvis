@@ -6,14 +6,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"strings"
+	"path"
 	"time"
 
 	"jarvis/jar/detector"
 )
 
+const (
+	LOGIN_URL  = "/login"
+	PING_URL   = "/ping"
+	REPORT_URL = "/report"
+)
+
 type MetricConfig struct {
+	Type     string
 	Detector string
 	Params   []interface{}
 	MD5      string
@@ -57,7 +63,7 @@ func (j *Jar) Init(root, appName string) (err error) {
 }
 
 func (j *Jar) initConfig() (err error) {
-	configFile := j.root + "/config.json"
+	configFile := path.Join(j.root, j.appName+".json")
 
 	configData, err := ioutil.ReadFile(configFile)
 
@@ -119,8 +125,8 @@ func (j *Jar) Run() {
 			continue
 		}
 
-		_, err = http.Post(j.config.ServerType+"://"+j.config.ServerAddr+"/report", "application/json; charset=utf-8", bytes.NewReader(statData))
-		_, err = os.Stderr.Write(statData)
+		_, err = http.Post(j.config.ServerType+"://"+j.config.ServerAddr+REPORT_URL,
+			"application/json; charset=utf-8", bytes.NewReader(statData))
 
 		if err != nil {
 			log.Println("[ERRO]", err)
@@ -134,11 +140,10 @@ func (j *Jar) detect(configChan chan MetricConfig, metricChan chan string) {
 	metricConf := <-configChan
 	metric := <-metricChan
 
-	if strings.HasPrefix(metricConf.Detector, "call:") {
-		funcName := strings.TrimPrefix(metricConf.Detector, "call:")
+	if metricConf.Type == "call" {
 
 		var err error
-		metric, err = detector.Call(funcName, metricConf.Params)
+		metric, err = detector.Call(metricConf.Detector, metricConf.Params)
 		if err != nil {
 			metric = err.Error()
 		}

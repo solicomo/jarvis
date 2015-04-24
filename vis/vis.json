@@ -1,0 +1,6 @@
+{
+	"ListenType": "http",
+	"ListenAddr": "0.0.0.0:8081",
+	"SiteType": "http",
+	"SiteAddr": "0.0.0.0:8080"
+}

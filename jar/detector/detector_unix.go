@@ -4,7 +4,6 @@ package detector
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"syscall"
 	"unsafe"
@@ -55,7 +54,7 @@ func (Detector) OSVer(params ...string) (result string, err error) {
 func (Detector) Uptime() (result string, err error) {
 
 	if upt, err := host_stat.GetUptimeStat(); err == nil {
-		result = fmt.Sprintf("%v", uint64(upt))
+		result = fmt.Sprintf("%v", uint64(upt.Uptime))
 	}
 
 	return
@@ -130,7 +129,7 @@ func (Detector) DiskSize() (result string, err error) {
 
 		disk_total := uint64(0)
 
-		for _, v := range disk_stat {
+		for _, v := range ds {
 			disk_total += v.Total
 		}
 
@@ -147,7 +146,7 @@ func (Detector) DiskRate() (result string, err error) {
 		disk_total := uint64(0)
 		disk_used := uint64(0)
 
-		for _, v := range disk_stat {
+		for _, v := range ds {
 			disk_total += v.Total
 			disk_used += v.Used
 		}
@@ -195,7 +194,7 @@ func (Detector) NetRead() (result string, err error) {
 
 		net_read := uint64(0)
 
-		for _, v := range net_stat {
+		for _, v := range ns {
 			if v.Device != "lo" {
 				net_read += v.RXBytes / 1024
 			}
@@ -213,7 +212,7 @@ func (Detector) NetWrite() (result string, err error) {
 
 		net_write := uint64(0)
 
-		for _, v := range net_stat {
+		for _, v := range ns {
 			if v.Device != "lo" {
 				net_write += v.TXBytes / 1024
 			}

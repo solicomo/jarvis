@@ -15,6 +15,21 @@ func int8ToString(bs []int8) string {
 	return strings.TrimRight(string(*(*[]byte)(unsafe.Pointer(&bs))), "\x00")
 }
 
+func Round(data float64, precision int) (result float64) {
+	pow := math.Pow(10, float64(precision))
+	digit := pow * data
+	_, div := math.Modf(digit)
+
+	if div >= 0.5 {
+		result = math.Ceil(digit)
+	} else {
+		result = math.Floor(digit)
+	}
+	result = result / pow
+
+	return
+}
+
 func (Detector) OSVer(params ...string) (result string, err error) {
 	var u syscall.Utsname
 	if err = syscall.Uname(&u); err != nil {

@@ -1,17 +1,17 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
-	"net/http"
-
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"path"
+	"sync"
 )
 
 type Config struct {
-	ListenType string
-	ListenAddr string
+	MonitorType string
+	MonitorAddr string
+	PortalType  string
+	PortalAddr  string
 }
 
 type Vis struct {
@@ -20,21 +20,48 @@ type Vis struct {
 	config  Config
 }
 
-func main() {
-	m := martini.Classic()
-	m.Use(render.Renderer(render.Options{
-		Directory:  "app/views/simple",
-		Extensions: []string{".tmpl", ".html"},
-	}))
+func (v *Vis) Init(root, appName string) (err error) {
 
-	m.Post("/report", func(req *http.Request) {
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(body[:]))
-	})
+	v.root = root
+	v.appName = appName
 
-	m.RunOnAddr(":8081")
+	err = v.initConfig()
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+func (v *Vis) initConfig() (err error) {
+
+	configFile := path.Join(v.root, v.appName+".json")
+
+	configData, err := ioutil.ReadFile(configFile)
+
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(configData, &v.config)
+
+	return
+}
+
+func (v *Vis) Run() {
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		v.runMonitor()
+	}()
+
+	go func() {
+		defer wg.Done()
+		v.runPortal()
+	}()
+
+	wg.Wait()
 }

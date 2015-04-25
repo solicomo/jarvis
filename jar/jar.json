@@ -2,8 +2,8 @@
 	"ID": "auto",
 	"ListenType": "http",
 	"ListenAddr": "0.0.0.0:8080",
-	"ServerType": "http",
-	"ServerAddr": "127.0.0.1:8081",
+	"MonitorType": "http",
+	"MonitorAddr": "127.0.0.1:8081",
 	"Metrics": {
 		"OSVer": {
 			"Type": "call",

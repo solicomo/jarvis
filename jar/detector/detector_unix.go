@@ -1,4 +1,4 @@
-// +build !windows
+// +build linux
 
 package detector
 
@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/solicomo/host-stat-go"
+	"github.com/likexian/host-stat-go"
 )
 
 func int8ToString(bs []int8) string {

@@ -25,5 +25,6 @@ _testmain.go
 
 *.sublime-workspace
 *.log
+*.db
 jar/jar
 vis/vis

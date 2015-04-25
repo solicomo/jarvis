@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"path"
 	"sync"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Config struct {
@@ -18,6 +21,7 @@ type Vis struct {
 	root    string
 	appName string
 	config  Config
+	db      *sql.DB
 }
 
 func (v *Vis) Init(root, appName string) (err error) {
@@ -26,9 +30,12 @@ func (v *Vis) Init(root, appName string) (err error) {
 	v.appName = appName
 
 	err = v.initConfig()
+
 	if err != nil {
 		return err
 	}
+
+	err = v.initDB()
 
 	return
 }
@@ -44,6 +51,13 @@ func (v *Vis) initConfig() (err error) {
 	}
 
 	err = json.Unmarshal(configData, &v.config)
+
+	return
+}
+
+func (v *Vis) initDB() (err error) {
+
+	v.db, err = sql.Open("sqlite3", path.Join(v.root, "app/data", v.appName+".db"))
 
 	return
 }

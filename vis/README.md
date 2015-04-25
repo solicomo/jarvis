@@ -10,5 +10,5 @@ J.A.R.V.I.S
 
 2. initate database
 
-    $ sqlite3 app/data/database.sqlite
+    $ sqlite3 app/data/vis.db
     > . app/data/init.sql

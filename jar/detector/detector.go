@@ -11,7 +11,9 @@ type Detector struct {
 }
 
 func Call(funcName string, params []interface{}) (result string, err error) {
+
 	var d Detector
+
 	fv := reflect.ValueOf(d).MethodByName(funcName)
 
 	if !fv.IsValid() {

@@ -1,5 +1,4 @@
 {
-	"ID": "auto",
 	"ListenType": "http",
 	"ListenAddr": "0.0.0.0:8080",
 	"MonitorType": "http",

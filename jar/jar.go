@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"sync"
 	"time"
 
 	"jarvis"
@@ -14,12 +15,13 @@ import (
 )
 
 type Config struct {
-	ID          string
-	ListenType  string
-	ListenAddr  string
-	MonitorType string
-	MonitorAddr string
-	Metrics     map[string]jarvis.MetricConfig
+	ID           string
+	ListenType   string
+	ListenAddr   string
+	MonitorType  string
+	MonitorAddr  string
+	MetricsMutex sync.RWMutex
+	Metrics      map[string]jarvis.MetricConfig
 }
 
 type Metric struct {
@@ -74,7 +76,9 @@ func (j *Jar) Run() {
 		time.Sleep(10 * time.Second)
 	}
 
-	for _ = range time.Tick(3 * time.Second) {
+	go j.ping()
+
+	for _ = range time.Tick(10 * time.Minute) {
 
 		go j.report()
 	}
@@ -125,7 +129,39 @@ func (j *Jar) login() (err error) {
 	return
 }
 
+func (j *Jar) ping() {
+
+	for _ = range time.Tick(1 * time.Minute) {
+
+		var ping jarvis.Ping
+
+		ping.ID = j.config.ID
+		ping.Uptime, _ = detector.Call("Uptime", []interface{}{})
+
+		resp, err := j.postTo(jarvis.URL_PING, ping)
+
+		if err != nil {
+			continue
+		}
+
+		var pingRsp jarvis.PingRsp
+
+		err = json.Unmarshal(resp, &pingRsp)
+
+		if err != nil {
+			log.Println("[ERRO]", err)
+			continue
+		}
+
+		j.config.MetricsMutex.Lock()
+		j.config.Metrics = pingRsp.Metrics
+		j.config.MetricsMutex.Unlock()
+	}
+}
+
 func (j *Jar) report() {
+
+	j.config.MetricsMutex.RLock()
 
 	metricCount := len(j.config.Metrics)
 	metricConfigChan := make(chan jarvis.MetricConfig, metricCount)
@@ -139,6 +175,8 @@ func (j *Jar) report() {
 
 		metricConfigChan <- config
 	}
+
+	j.config.MetricsMutex.RUnlock()
 
 	var report jarvis.MetricReport
 	report.ID = j.config.ID

@@ -45,6 +45,10 @@ type Ping struct {
 	Uptime string
 }
 
+type PingRsp struct {
+	Metrics map[string]MetricConfig
+}
+
 type CommonRsp struct {
 	Status string
 }

@@ -1,6 +1,6 @@
 {
 	"MonitorType": "http",
-	"MonitorAddr": "0.0.0.0:8081",
+	"MonitorAddr": "0.0.0.0:8091",
 	"PortalType": "http",
-	"PortalAddr": "0.0.0.0:8080"
+	"PortalAddr": "0.0.0.0:8090"
 }

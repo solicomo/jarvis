@@ -1,10 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"jarvis"
@@ -12,21 +14,21 @@ import (
 
 const (
 	SQL_NEW_METRIC_RECORD = `INSERT INTO metric_records (node, metric, value, ctime)
-		SELECT ?, metrics.id, '?', datetime('now','localtime') FROM metrics WHERE name = '?';`
+		SELECT ?, metrics.id, ?, datetime('now','localtime') FROM metrics WHERE name = ?;`
 
-	SQL_NEW_NODE = `INSERT INTO nodes (addr, type) VALUES ('?', '?');`
+	SQL_NEW_NODE = `INSERT INTO nodes (addr, type) VALUES (?, ?);`
 
 	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, atime, ctime) 
 		SELECT ?, id, interval, datetime('now','localtime'), datetime('now','localtime') 
 		FROM default_metrics;`
 
-	SQL_UPDATE_NODE = `UPDATE nodes SET type = '?', os = '?', cpu = '?', core = '?', mem = '?',
-		disk = '?', uptime = '?', atime = datetime('now','localtime') WHERE id = ?;`
+	SQL_UPDATE_NODE = `UPDATE nodes SET type = ?, os = ?, cpu = ?, core = ?, mem = ?,
+		disk = ?, uptime = ?, atime = datetime('now','localtime') WHERE id = ?;`
 
-	SQL_UPDATE_NODE_UPTIME = `UPDATE nodes SET uptime = '?', atime = datetime('now','localtime')
+	SQL_UPDATE_NODE_UPTIME = `UPDATE nodes SET uptime = ?, atime = datetime('now','localtime')
 		WHERE id = ?;`
 
-	SQL_SELECT_NODE_ID = `SELECT id FROM WHERE addr = '?';`
+	SQL_SELECT_NODE_ID = `SELECT id FROM nodes WHERE addr = ?;`
 
 	SQL_SELECT_NODE_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
 		WHERE id IN (SELECT metric FROM metric_bindings WHERE node = ?);`
@@ -60,6 +62,7 @@ func (v *Vis) runMonitor() {
 func check(err error) {
 	if err != nil {
 		log.Println("[ERRO]", err)
+		log.Println("[DEBU]", string(debug.Stack()[:]))
 		panic(err)
 	}
 }
@@ -74,6 +77,7 @@ func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
 			}
 		}()
 
+		log.Println("[INFO]", "request from", r.RemoteAddr, r.URL)
 		fn(w, r)
 	}
 }
@@ -96,14 +100,9 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	var nodeID int64
 
-	row := v.db.QueryRow(SQL_SELECT_NODE_ID, login.ListenAddr)
+	err = v.db.QueryRow(SQL_SELECT_NODE_ID, login.ListenAddr).Scan(&nodeID)
 
-	if row != nil {
-
-		err = row.Scan(nodeID)
-		check(err)
-
-	} else {
+	if err == sql.ErrNoRows {
 
 		result, e := v.db.Exec(SQL_NEW_NODE, login.ListenAddr, login.ListenType)
 		check(e)
@@ -116,6 +115,9 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("[WARN]", err)
 		}
+
+	} else {
+		check(err)
 	}
 
 	_, err = v.db.Exec(SQL_UPDATE_NODE, login.ListenType, login.Stat.OSVer, login.Stat.CPU,

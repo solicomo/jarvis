@@ -78,8 +78,7 @@ CREATE TABLE metric_records (
 	node INTEGER NOT NULL,
 	metric INTEGER NOT NULL,
 	value TEXT NOT NULL,
-	ctime DATETIME,
-	UNIQUE(node, metric)
+	ctime DATETIME
 	);
 
 DROP TABLE IF EXISTS config;

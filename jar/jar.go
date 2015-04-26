@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -78,7 +80,7 @@ func (j *Jar) Run() {
 
 	go j.ping()
 
-	for _ = range time.Tick(10 * time.Minute) {
+	for _ = range time.Tick(10 * time.Second) {
 
 		go j.report()
 	}
@@ -126,6 +128,7 @@ func (j *Jar) login() (err error) {
 	j.config.ID = logRsp.ID
 	j.config.Metrics = logRsp.Metrics
 
+	log.Println("[INFO]", "login success:", logRsp.ID)
 	return
 }
 
@@ -133,6 +136,8 @@ func (j *Jar) ping() {
 
 	for _ = range time.Tick(1 * time.Minute) {
 
+		log.Println("[INFO]", "ping")
+		
 		var ping jarvis.Ping
 
 		ping.ID = j.config.ID
@@ -161,6 +166,8 @@ func (j *Jar) ping() {
 
 func (j *Jar) report() {
 
+	log.Println("[INFO]", "report")
+	
 	j.config.MetricsMutex.RLock()
 
 	metricCount := len(j.config.Metrics)
@@ -182,7 +189,8 @@ func (j *Jar) report() {
 	report.ID = j.config.ID
 	report.Metrics = make(map[string]string, metricCount)
 
-	for metric := range metricChan {
+	for i := 0; i < metricCount; i++ {
+		metric := <-metricChan
 		report.Metrics[metric.Name] = metric.Value
 	}
 
@@ -202,16 +210,21 @@ func (j *Jar) postTo(url string, data interface{}) (resp []byte, err error) {
 
 	r, err := http.Post(postURL, "application/json; charset=utf-8", bytes.NewReader(postData))
 
-	defer r.Body.Close()
-
 	if err != nil {
 		log.Println("[ERRO]", err)
 		return
 	}
 
+	defer r.Body.Close()
+
 	resp, err = ioutil.ReadAll(r.Body)
 
 	if err != nil {
+		log.Println("[ERRO]", err)
+	}
+
+	if r.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("%v, %v", r.StatusCode, url))
 		log.Println("[ERRO]", err)
 	}
 

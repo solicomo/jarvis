@@ -2,12 +2,14 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"path"
 	"sync"
 	"time"
@@ -137,7 +139,7 @@ func (j *Jar) ping() {
 	for _ = range time.Tick(1 * time.Minute) {
 
 		log.Println("[INFO]", "ping")
-		
+
 		var ping jarvis.Ping
 
 		ping.ID = j.config.ID
@@ -167,7 +169,7 @@ func (j *Jar) ping() {
 func (j *Jar) report() {
 
 	log.Println("[INFO]", "report")
-	
+
 	j.config.MetricsMutex.RLock()
 
 	metricCount := len(j.config.Metrics)
@@ -214,7 +216,6 @@ func (j *Jar) postTo(url string, data interface{}) (resp []byte, err error) {
 		log.Println("[ERRO]", err)
 		return
 	}
-
 	defer r.Body.Close()
 
 	resp, err = ioutil.ReadAll(r.Body)
@@ -224,7 +225,7 @@ func (j *Jar) postTo(url string, data interface{}) (resp []byte, err error) {
 	}
 
 	if r.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("%v, %v", r.StatusCode, url))
+		err = errors.New(fmt.Sprintf("%v %v", r.StatusCode, url))
 		log.Println("[ERRO]", err)
 	}
 
@@ -237,15 +238,81 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 	var metric Metric
 	metric.Name = metricConf.Name
 
-	if metricConf.Type == "call" {
-
-		var err error
-		metric.Value, err = detector.Call(metricConf.Detector, metricConf.Params)
-		if err != nil {
-			metric.Value = err.Error()
+	switch metricConf.Type {
+	case "call":
+		{
+			var err error
+			metric.Value, err = detector.Call(metricConf.Detector, metricConf.Params)
+			if err != nil {
+				metric.Value = err.Error()
+			}
 		}
-	} else {
-		metric.Value = "Not supported yet."
+	case "remote":
+		{
+			metricConf.Detector = j.config.MonitorType + "://" + j.config.MonitorAddr + metricConf.Detector
+		}
+		fallthrough
+	case "url":
+		{
+			detectorFile := path.Join(j.root, "cache/detector", metricConf.Name)
+
+			fileData, err := ioutil.ReadFile(detectorFile)
+
+			var h string
+
+			if err == nil {
+				sum := sha1.Sum(fileData)
+				h = string(sum[:])
+			}
+
+			if h != metricConf.MD5 {
+				r, err := http.Get(metricConf.Detector)
+
+				if err != nil {
+					metric.Value = err.Error()
+					log.Println("[ERRO]", "get", metricConf.Detector, err)
+					break
+				}
+				defer r.Body.Close()
+
+				if r.StatusCode != 200 {
+					log.Println("[ERRO]", r.StatusCode, metricConf.Detector)
+					break
+				}
+
+				resp, err := ioutil.ReadAll(r.Body)
+
+				sum := sha1.Sum(resp)
+				h = string(sum[:])
+
+				if h != metricConf.MD5 {
+					metric.Value = "[ERRO]" + "file verify failed: " + detectorFile
+					break
+				}
+
+				err = ioutil.WriteFile(detectorFile, resp, 0755)
+
+				if err != nil {
+					metric.Value = err.Error()
+					log.Println("[ERRO]", "save", detectorFile, err)
+					break
+				}
+			}
+
+			out, err := exec.Command(detectorFile /* TODO: not supported yet, metricConf.Params*/).Output()
+
+			if err != nil {
+				metric.Value = err.Error()
+				log.Println("[ERRO]", "exec", detectorFile, err)
+				break
+			}
+
+			metric.Value = string(out[:])
+		}
+	default:
+		{
+			metric.Value = "Not supported yet."
+		}
 	}
 
 	metricChan <- metric

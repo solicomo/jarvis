@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 
 	"jarvis"
 )
@@ -18,8 +19,8 @@ const (
 
 	SQL_NEW_NODE = `INSERT INTO nodes (addr, type) VALUES (?, ?);`
 
-	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, atime, ctime) 
-		SELECT ?, id, interval, datetime('now','localtime'), datetime('now','localtime') 
+	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, params, atime, ctime) 
+		SELECT ?, id, interval, params, datetime('now','localtime'), datetime('now','localtime') 
 		FROM default_metrics;`
 
 	SQL_UPDATE_NODE = `UPDATE nodes SET type = ?, os = ?, cpu = ?, core = ?, mem = ?,
@@ -30,14 +31,16 @@ const (
 
 	SQL_SELECT_NODE_ID = `SELECT id FROM nodes WHERE addr = ?;`
 
-	SQL_SELECT_NODE_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
-		WHERE id IN (SELECT metric FROM metric_bindings WHERE node = ?);`
+	SQL_SELECT_NODE_METRICS = `SELECT m.name, m.type, m.detector, b.params, m.md5 
+		FROM metrics AS m, metric_bindings AS b 
+		WHERE m.id = b.metric AND b.node = ?);`
 
 	// SQL_SELECT_NEW_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
 	// 	WHERE id IN (SELECT metric FROM metric_bindings AS b, nodes AS n
 	// 		WHERE b.atime > n.atime AND b.node = n.id AND n.id = ?);`
 
-	SQL_CLEAR_HISTORY = `DELETE FROM metric_records where julianday(strftime('%Y-%m-%d',datetime('now','localtime'))) - julianday(strftime('%Y-%m-%d', ctime)) > 365;`
+	SQL_CLEAR_HISTORY = `DELETE FROM metric_records WHERE 
+		julianday(datetime('now','localtime')) - julianday(ctime) > 365;`
 )
 
 func (v *Vis) runMonitor() {
@@ -97,6 +100,15 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, &login)
 	check(err)
+
+	switch {
+	case strings.HasPrefix(login.ListenAddr, "127.0.0.1"):
+		fallthrough
+	case strings.HasPrefix(login.ListenAddr, "0.0.0.0"):
+		fallthrough
+	case strings.HasPrefix(login.ListenAddr, "localhost"):
+		login.ListenAddr = r.RemoteAddr
+	}
 
 	var nodeID int64
 

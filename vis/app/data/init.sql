@@ -17,33 +17,35 @@ CREATE TABLE metrics (
 	name VARCHAR(255) UNIQUE NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	detector TEXT NOT NULL,
-	params TEXT,
 	md5 VARCHAR(255)
 	);
 
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (1, "Load", "call", "Load", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (2, "CPURate", "call", "CPURate", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (3, "MemRate", "call", "MemRate", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (4, "DiskRate", "call", "DiskRate", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (5, "DiskRead", "call", "DiskRead", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (6, "DiskWrite", "call", "DiskWrite", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (7, "NetRead", "call", "NetRead", "", "");
-INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (8, "NetWrite", "call", "NetWrite", "", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (1, "Load", "call", "Load", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (2, "CPURate", "call", "CPURate", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (3, "MemRate", "call", "MemRate", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (4, "DiskRate", "call", "DiskRate", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (5, "DiskRead", "call", "DiskRead", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (6, "DiskWrite", "call", "DiskWrite", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (7, "NetRead", "call", "NetRead", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (8, "NetWrite", "call", "NetWrite", "");
+INSERT INTO metrics (id, name, type, detector, params, md5) VALUES (9, "SayHi", "remote", "/detector/sayhi.py", "a7dc02dccc8c6aa436a62bd556e83c760af65c02");
 
 DROP TABLE IF EXISTS default_metrics;
 CREATE TABLE default_metrics (
 	id INTEGER PRIMARY KEY NOT NULL,
-	interval INTEGER NOT NULL
+	interval INTEGER NOT NULL,
+	params TEXT
 	);
 
-INSERT INTO default_metrics (id, interval) VALUES (1, 600);
-INSERT INTO default_metrics (id, interval) VALUES (2, 600);
-INSERT INTO default_metrics (id, interval) VALUES (3, 600);
-INSERT INTO default_metrics (id, interval) VALUES (4, 600);
-INSERT INTO default_metrics (id, interval) VALUES (5, 600);
-INSERT INTO default_metrics (id, interval) VALUES (6, 600);
-INSERT INTO default_metrics (id, interval) VALUES (7, 600);
-INSERT INTO default_metrics (id, interval) VALUES (8, 600);
+INSERT INTO default_metrics (id, interval) VALUES (1, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (2, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (3, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (4, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (5, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (6, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (7, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (8, 600, "");
+INSERT INTO default_metrics (id, interval) VALUES (9, 600, "");
 
 DROP TABLE IF EXISTS nodes;
 CREATE TABLE nodes (
@@ -67,6 +69,7 @@ CREATE TABLE metric_bindings (
 	node INTEGER NOT NULL,
 	metric INTEGER NOT NULL,
 	interval INTEGER NOT NULL,
+	params TEXT,
 	ctime DATETIME,
 	atime DATETIME,
 	UNIQUE(node, metric)

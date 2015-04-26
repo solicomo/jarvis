@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
+	"path"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -33,7 +35,7 @@ const (
 
 	SQL_SELECT_NODE_METRICS = `SELECT m.name, m.type, m.detector, b.params, m.md5 
 		FROM metrics AS m, metric_bindings AS b 
-		WHERE m.id = b.metric AND b.node = ?);`
+		WHERE m.id = b.metric AND b.node = ?;`
 
 	// SQL_SELECT_NEW_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
 	// 	WHERE id IN (SELECT metric FROM metric_bindings AS b, nodes AS n
@@ -52,7 +54,7 @@ func (v *Vis) runMonitor() {
 	mux.HandleFunc(jarvis.URL_PING, safeHandler(v.handlePing))
 	mux.HandleFunc(jarvis.URL_REPORT, safeHandler(v.handleReport))
 
-	mux.Handle(jarvis.URL_PUBLIC, http.FileServer(http.Dir(jarvis.DIR_PUBLIC)))
+	mux.Handle(jarvis.URL_DETECTOR, http.FileServer(http.Dir(path.Join(v.root, jarvis.DIR_PUBLIC))))
 
 	server := &http.Server{Addr: v.config.MonitorAddr, Handler: mux}
 	err := server.ListenAndServe()
@@ -107,7 +109,15 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(login.ListenAddr, "0.0.0.0"):
 		fallthrough
 	case strings.HasPrefix(login.ListenAddr, "localhost"):
-		login.ListenAddr = r.RemoteAddr
+		_, op, e := net.SplitHostPort(login.ListenAddr)
+
+		if e == nil {
+			h, _, e := net.SplitHostPort(r.RemoteAddr)
+
+			if e == nil {
+				login.ListenAddr = h + ":" + op
+			}
+		}
 	}
 
 	var nodeID int64

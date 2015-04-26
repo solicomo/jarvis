@@ -6,7 +6,7 @@ const (
 
 const (
 	URL_INDEX  = "/"
-	URL_PUBLIC = "/public/"
+	URL_DETECTOR = "/detector/"
 	URL_REPORT = "/report"
 	URL_LOGIN  = "/login"
 	URL_PING   = "/ping"

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-print "I'm Jar."
+import sys
+
+sys.stdout.write("I'm Jar.")

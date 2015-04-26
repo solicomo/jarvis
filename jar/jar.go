@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"path"
 	"sync"
@@ -254,7 +255,8 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 		fallthrough
 	case "url":
 		{
-			detectorFile := path.Join(j.root, "cache/detector", metricConf.Name)
+			detectorPath := path.Join(j.root, "cache/detector")
+			detectorFile := path.Join(detectorPath, metricConf.Name)
 
 			fileData, err := ioutil.ReadFile(detectorFile)
 
@@ -262,7 +264,7 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 
 			if err == nil {
 				sum := sha1.Sum(fileData)
-				h = string(sum[:])
+				h = fmt.Sprintf("%x", sum)
 			}
 
 			if h != metricConf.MD5 {
@@ -283,10 +285,19 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 				resp, err := ioutil.ReadAll(r.Body)
 
 				sum := sha1.Sum(resp)
-				h = string(sum[:])
+				h = fmt.Sprintf("%x", sum)
 
 				if h != metricConf.MD5 {
-					metric.Value = "[ERRO]" + "file verify failed: " + detectorFile
+					metric.Value = fmt.Sprintf("file verify failed [%v:%v]: %v", h, metricConf.MD5, detectorFile)
+					log.Println("[ERRO]", metric.Value)
+					break
+				}
+
+				err = os.MkdirAll(detectorPath, 0755)
+
+				if err != nil {
+					metric.Value = err.Error()
+					log.Println("[ERRO]", "mkdir", detectorPath, err)
 					break
 				}
 

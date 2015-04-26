@@ -34,6 +34,8 @@ const (
 	// SQL_SELECT_NEW_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
 	// 	WHERE id IN (SELECT metric FROM metric_bindings AS b, nodes AS n
 	// 		WHERE b.atime > n.atime AND b.node = n.id AND n.id = ?);`
+
+	SQL_CLEAR_HISTORY = `DELETE FROM metric_records where julianday(strftime('%Y-%m-%d',datetime('now','localtime'))) - julianday(strftime('%Y-%m-%d', ctime)) > 365;`
 )
 
 func (v *Vis) runMonitor() {

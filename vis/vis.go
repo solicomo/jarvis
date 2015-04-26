@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -62,10 +63,17 @@ func (v *Vis) initDB() (err error) {
 	return
 }
 
+func (v *Vis) clearHistory() {
+
+	for _ = range time.Tick(1 * time.Hour) {
+		v.db.Exec(SQL_CLEAR_HISTORY)
+	}
+}
+
 func (v *Vis) Run() {
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -75,6 +83,11 @@ func (v *Vis) Run() {
 	go func() {
 		defer wg.Done()
 		v.runPortal()
+	}()
+
+	go func() {
+		defer wg.Done()
+		v.clearHistory()
 	}()
 
 	wg.Wait()

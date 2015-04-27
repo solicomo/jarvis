@@ -28,4 +28,5 @@ _testmain.go
 *.db
 jar/jar
 vis/vis
+vis/public/*
 cache

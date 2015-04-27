@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 	"unsafe"
-
+	"github.com/toolkits/nux"
 	"github.com/likexian/host-stat-go"
 )
 
@@ -69,9 +69,15 @@ func (Detector) OSVer(params ...string) (result string, err error) {
 
 func (Detector) Uptime() (result string, err error) {
 
-	if upt, err := host_stat.GetUptimeStat(); err == nil {
-		result = fmt.Sprintf("%v", uint64(upt.Uptime))
+	days, hours, mins, err := nux.SystemUptime()
+
+	if err == nil {
+		result = fmt.Sprintf("%v days, %v:%v", days, hours, mins)
 	}
+
+//	if upt, err := host_stat.GetUptimeStat(); err == nil {
+//		result = fmt.Sprintf("%v", uint64(upt.Uptime))
+//	}
 
 	return
 }

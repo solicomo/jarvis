@@ -83,7 +83,7 @@ func (j *Jar) Run() {
 
 	go j.ping()
 
-	for _ = range time.Tick(10 * time.Second) {
+	for _ = range time.Tick(10 * time.Minute) {
 
 		go j.report()
 	}
@@ -144,7 +144,7 @@ func (j *Jar) ping() {
 		var ping jarvis.Ping
 
 		ping.ID = j.config.ID
-		ping.Uptime, _ = detector.Call("Uptime", []interface{}{})
+		ping.Uptime, _ = detector.Call("Uptime")
 
 		resp, err := j.postTo(jarvis.URL_PING, ping)
 

@@ -33,7 +33,7 @@ type NodeInfo struct {
 }
 
 type Login struct {
-	*NodeInfo
+	NodeInfo
 }
 
 type LoginRsp struct {

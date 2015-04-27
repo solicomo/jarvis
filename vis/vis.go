@@ -4,10 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"path"
+	"runtime/debug"
 	"sync"
 	"time"
 
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -116,7 +121,10 @@ func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func martiniSafeHandler(layout string, h martini.Handler) martini.Handler {
+type handlerFunc func(*http.Request, martini.Params, map[string]interface{})
+type handlerWrapFunc func(*http.Request, martini.Params, render.Render)
+
+func martiniSafeHandler(layout string, hf handlerFunc) handlerWrapFunc {
 
 	return func(req *http.Request, params martini.Params, r render.Render) {
 
@@ -133,7 +141,7 @@ func martiniSafeHandler(layout string, h martini.Handler) martini.Handler {
 
 		log.Println("[INFO]", "request from", req.RemoteAddr, req.URL)
 
-		h(req, params, data)
+		hf(req, params, data)
 
 		r.HTML(200, layout, data)
 	}

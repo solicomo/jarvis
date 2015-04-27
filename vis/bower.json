@@ -25,6 +25,7 @@
     "font-awesome": "~4.3.0",
     "bootstrap": "~3.3.4",
     "html5shiv": "~3.7.2",
-    "respond": "~1.4.2"
+    "respond": "~1.4.2",
+    "holderjs": "~2.6.0"
   }
 }

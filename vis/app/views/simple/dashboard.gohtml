@@ -4,11 +4,11 @@
 
 {{template "sidebar"}}
 
-{{if .Status == "200"}}
+{{if eq .Status "200"}}
 	{{template "main" .}}
 {{else}}
-	{{template .Status .ErrMsg}}
-{{ende}}
+	{{template "500" .ErrMsg}}
+{{end}}
 
 
 {{template "foot"}}

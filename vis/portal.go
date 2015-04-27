@@ -1,14 +1,19 @@
 package main
 
 import (
+	"net/http"
 	"path"
 
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
+
+	_ "github.com/mattn/go-sqlite3"
+
+	"jarvis"
 )
 
 const (
-	SQL_SELECT_NODES_INFO = `SELECT name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE addr = ?;`
+	SQL_SELECT_NODES_INFO = `SELECT name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes;`
 )
 
 func (v *Vis) runPortal() {
@@ -16,25 +21,24 @@ func (v *Vis) runPortal() {
 
 	m.Use(render.Renderer(render.Options{
 		Directory:  path.Join(v.root, "app/views/simple"),
-		Extensions: []string{".tmpl", ".html"},
+		Extensions: []string{".gohtml", ".tmpl", ".html"},
 	}))
 
-	m.Get("/dashboard/:group", martiniSafeHandler("dashboard", v.handleDashboard)
+	m.Get("/dashboard/:group", martiniSafeHandler("dashboard", v.handleDashboard))
 
 	m.RunOnAddr(v.config.PortalAddr)
 }
 
-func (v *Vis) handleDashboard(req *http.Request, params martini.Params, data *map[string]interface{}) {
+func (v *Vis) handleDashboard(req *http.Request, params martini.Params, data map[string]interface{}) {
 
 	group := params["group"]
 
 	data["Status"] = "200"
 	data["Title"] = group + " | Dashboard"
 
-	data["Nodes"] = make(map[string]interface{})
-	data["Nodes"]["Info"] = make([]jarvis.NodeInfo, 1)
+	nodesInfo := make([]jarvis.NodeInfo, 0)
 
-	rows, err := v.db.Query(SQL_SELECT_NODE_METRICS, nodeID)
+	rows, err := v.db.Query(SQL_SELECT_NODES_INFO)
 	check(err)
 
 	defer rows.Close()
@@ -46,10 +50,14 @@ func (v *Vis) handleDashboard(req *http.Request, params martini.Params, data *ma
 		err = rows.Scan(&info.Name, &info.Type, &info.Addr, &info.OS,
 			&info.CPU, &info.Core, &info.Mem, &info.Disk, &info.Uptime)
 		check(err)
-		
-		data["Nodes"]["Info"] = append(data["Nodes"]["Info"], info)
+
+		nodesInfo = append(nodesInfo, info)
 	}
 
 	err = rows.Err()
-	cehck(err)
+	check(err)
+
+	nodes := make(map[string]interface{})
+	nodes["Info"] = nodesInfo
+	data["Nodes"] = nodes
 }

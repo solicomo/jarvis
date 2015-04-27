@@ -40,8 +40,7 @@
 								</tr>
 							</thead>
 							<tbody>
-								{{range .Nodes}}
-								{{with .Info}}
+								{{range .Nodes.Info}}
 								<tr>
 									<td>{{.Name}}</td>
 									<td>{{.Addr}}</td>
@@ -49,10 +48,9 @@
 									<td>{{.Core}}</td>
 									<td>{{.Mem}} MB</td>
 									<td>{{.Disk}} MB</td>
-									<td>{{.OS}} MB</td>
-									<td>{{.CPU}} MB</td>
+									<td>{{.OS}}</td>
+									<td>{{.CPU}}</td>
 								</tr>
-								{{end}}
 								{{end}}
 							</tbody>
 						</table>

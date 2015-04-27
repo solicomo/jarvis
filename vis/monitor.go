@@ -8,18 +8,19 @@ import (
 	"net"
 	"net/http"
 	"path"
-	"runtime/debug"
 	"strconv"
 	"strings"
 
 	"jarvis"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
 	SQL_NEW_METRIC_RECORD = `INSERT INTO metric_records (node, metric, value, ctime)
 		SELECT ?, metrics.id, ?, datetime('now','localtime') FROM metrics WHERE name = ?;`
 
-	SQL_NEW_NODE = `INSERT INTO nodes (addr, type) VALUES (?, ?);`
+	SQL_NEW_NODE = `INSERT INTO nodes (name, addr, type) VALUES (?, ?, ?);`
 
 	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, params, atime, ctime) 
 		SELECT ?, id, interval, params, datetime('now','localtime'), datetime('now','localtime') 
@@ -103,7 +104,7 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err == sql.ErrNoRows {
 
-		result, e := v.db.Exec(SQL_NEW_NODE, login.Addr, login.Type)
+		result, e := v.db.Exec(SQL_NEW_NODE, login.Addr, login.Addr, login.Type)
 		check(e)
 
 		nodeID, err = result.LastInsertId()

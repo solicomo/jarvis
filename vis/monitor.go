@@ -64,29 +64,6 @@ func (v *Vis) runMonitor() {
 	}
 }
 
-func check(err error) {
-	if err != nil {
-		log.Println("[ERRO]", err)
-		log.Println("[DEBU]", string(debug.Stack()[:]))
-		panic(err)
-	}
-}
-
-func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		defer func() {
-			if err, ok := recover().(error); ok {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		}()
-
-		log.Println("[INFO]", "request from", r.RemoteAddr, r.URL)
-		fn(w, r)
-	}
-}
-
 //=-=-=-=-=-=-=-=-=-=-=-=
 
 func (v *Vis) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -104,29 +81,29 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 	check(err)
 
 	switch {
-	case strings.HasPrefix(login.ListenAddr, "127.0.0.1"):
+	case strings.HasPrefix(login.Addr, "127.0.0.1"):
 		fallthrough
-	case strings.HasPrefix(login.ListenAddr, "0.0.0.0"):
+	case strings.HasPrefix(login.Addr, "0.0.0.0"):
 		fallthrough
-	case strings.HasPrefix(login.ListenAddr, "localhost"):
-		_, op, e := net.SplitHostPort(login.ListenAddr)
+	case strings.HasPrefix(login.Addr, "localhost"):
+		_, op, e := net.SplitHostPort(login.Addr)
 
 		if e == nil {
 			h, _, e := net.SplitHostPort(r.RemoteAddr)
 
 			if e == nil {
-				login.ListenAddr = h + ":" + op
+				login.Addr = h + ":" + op
 			}
 		}
 	}
 
 	var nodeID int64
 
-	err = v.db.QueryRow(SQL_SELECT_NODE_ID, login.ListenAddr).Scan(&nodeID)
+	err = v.db.QueryRow(SQL_SELECT_NODE_ID, login.Addr).Scan(&nodeID)
 
 	if err == sql.ErrNoRows {
 
-		result, e := v.db.Exec(SQL_NEW_NODE, login.ListenAddr, login.ListenType)
+		result, e := v.db.Exec(SQL_NEW_NODE, login.Addr, login.Type)
 		check(e)
 
 		nodeID, err = result.LastInsertId()
@@ -142,8 +119,8 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 		check(err)
 	}
 
-	_, err = v.db.Exec(SQL_UPDATE_NODE, login.ListenType, login.Stat.OSVer, login.Stat.CPU,
-		login.Stat.Core, login.Stat.Mem, login.Stat.Disk, login.Stat.Uptime, nodeID)
+	_, err = v.db.Exec(SQL_UPDATE_NODE, login.Type, login.OS, login.CPU,
+		login.Core, login.Mem, login.Disk, login.Uptime, nodeID)
 	check(err)
 
 	rows, err := v.db.Query(SQL_SELECT_NODE_METRICS, nodeID)

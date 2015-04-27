@@ -92,3 +92,49 @@ func (v *Vis) Run() {
 
 	wg.Wait()
 }
+
+func check(err error) {
+	if err != nil {
+		log.Println("[ERRO]", err)
+		log.Println("[DEBU]", string(debug.Stack()[:]))
+		panic(err)
+	}
+}
+
+func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		defer func() {
+			if err, ok := recover().(error); ok {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		}()
+
+		log.Println("[INFO]", "request from", r.RemoteAddr, r.URL)
+		fn(w, r)
+	}
+}
+
+func martiniSafeHandler(layout string, h martini.Handler) martini.Handler {
+
+	return func(req *http.Request, params martini.Params, r render.Render) {
+
+		data := make(map[string]interface{})
+
+		defer func() {
+			if err, ok := recover().(error); ok {
+				data["Status"] = "500"
+				data["ErrMsg"] = err.Error()
+
+				r.HTML(500, layout, data)
+			}
+		}()
+
+		log.Println("[INFO]", "request from", req.RemoteAddr, req.URL)
+
+		h(req, params, data)
+
+		r.HTML(200, layout, data)
+	}
+}

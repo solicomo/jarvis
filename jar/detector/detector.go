@@ -10,7 +10,7 @@ type Detector struct {
 	// Nothing
 }
 
-func Call(funcName string, params []interface{}) (result string, err error) {
+func Call(funcName string, params ...interface{}) (result string, err error) {
 
 	var d Detector
 

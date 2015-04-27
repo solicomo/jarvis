@@ -1,0 +1,14 @@
+{{template "head" .Title}}
+{{template "header"}}
+
+
+{{template "sidebar"}}
+
+{{if .Status == "200"}}
+	{{template "main" .}}
+{{else}}
+	{{template .Status .ErrMsg}}
+{{ende}}
+
+
+{{template "foot"}}

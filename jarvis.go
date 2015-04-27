@@ -5,11 +5,11 @@ const (
 )
 
 const (
-	URL_INDEX  = "/"
+	URL_INDEX    = "/"
 	URL_DETECTOR = "/detector/"
-	URL_REPORT = "/report"
-	URL_LOGIN  = "/login"
-	URL_PING   = "/ping"
+	URL_REPORT   = "/report"
+	URL_LOGIN    = "/login"
+	URL_PING     = "/ping"
 )
 
 type MetricConfig struct {
@@ -20,8 +20,11 @@ type MetricConfig struct {
 	MD5      string
 }
 
-type NodeStat struct {
-	OSVer  string
+type NodeInfo struct {
+	Name   string
+	Type   string
+	Addr   string
+	OS     string
 	CPU    string
 	Core   string
 	Mem    string
@@ -30,9 +33,7 @@ type NodeStat struct {
 }
 
 type Login struct {
-	ListenType string
-	ListenAddr string
-	Stat       NodeStat
+	*NodeInfo
 }
 
 type LoginRsp struct {

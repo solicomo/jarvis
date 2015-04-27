@@ -93,25 +93,25 @@ func (j *Jar) login() (err error) {
 
 	var logi jarvis.Login
 
-	logi.ListenType = j.config.ListenType
-	logi.ListenAddr = j.config.ListenAddr
+	logi.Type = j.config.ListenType
+	logi.Addr = j.config.ListenAddr
 
 	// Can not build on Mac
 	// var d detector.Detector
 
-	// logi.Stat.OSVer, _ = d.OSVer([]string{"s", "r", "m", "n"})
-	// logi.Stat.CPU, _ = d.CPUName()
-	// logi.Stat.Core, _ = d.CPUCore()
-	// logi.Stat.Mem, _ = d.MemSize()
-	// logi.Stat.Disk, _ = d.DiskSize()
-	// logi.Stat.Uptime, _ = d.Uptime()
+	// logi.OS, _ = d.OSVer("s", "r", "m", "n")
+	// logi.CPU, _ = d.CPUName()
+	// logi.Core, _ = d.CPUCore()
+	// logi.Mem, _ = d.MemSize()
+	// logi.Disk, _ = d.DiskSize()
+	// logi.Uptime, _ = d.Uptime()
 
-	logi.Stat.OSVer, _ = detector.Call("OSVer", []interface{}{"s", "r", "m", "n"})
-	logi.Stat.CPU, _ = detector.Call("CPUName", []interface{}{})
-	logi.Stat.Core, _ = detector.Call("CPUCore", []interface{}{})
-	logi.Stat.Mem, _ = detector.Call("MemSize", []interface{}{})
-	logi.Stat.Disk, _ = detector.Call("DiskSize", []interface{}{})
-	logi.Stat.Uptime, _ = detector.Call("Uptime", []interface{}{})
+	logi.OS, _ = detector.Call("OSVer", "s", "r", "m", "n")
+	logi.CPU, _ = detector.Call("CPUName")
+	logi.Core, _ = detector.Call("CPUCore")
+	logi.Mem, _ = detector.Call("MemSize")
+	logi.Disk, _ = detector.Call("DiskSize")
+	logi.Uptime, _ = detector.Call("Uptime")
 
 	resp, err := j.postTo(jarvis.URL_LOGIN, logi)
 
@@ -243,7 +243,7 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 	case "call":
 		{
 			var err error
-			metric.Value, err = detector.Call(metricConf.Detector, metricConf.Params)
+			metric.Value, err = detector.Call(metricConf.Detector, metricConf.Params...)
 			if err != nil {
 				metric.Value = err.Error()
 			}
@@ -310,7 +310,15 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 				}
 			}
 
-			out, err := exec.Command(detectorFile /* TODO: not supported yet, metricConf.Params*/).Output()
+			params := make([]string, len(metricConf.Params))
+
+			for _, p := range metricConf.Params {
+				if s, ok := p.(string); ok {
+					params = append(params, s)
+				}
+			}
+
+			out, err := exec.Command(detectorFile, params...).Output()
 
 			if err != nil {
 				metric.Value = err.Error()

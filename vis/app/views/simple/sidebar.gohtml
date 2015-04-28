@@ -1,44 +1,26 @@
 <div class="col-sm-3 col-md-2 sidebar">
 	<div class="panel-group" id="sidebarAccordion" role="tablist" aria-multiselectable="true">
-		<div class="panel panel-default">
-			<a class="panel-heading collapsed" role="tab" id="headingMain" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapseMain" aria-expanded="false" aria-controls="collapseMain">
-				<h4 class="panel-title">
-						Main
-				</h4>
+		{{$curGroup, $curSub := .CurGroup, .CurSubGroup}}
+		{{range .Groups}}
+		{{ne .ID 1 or len .Subs | if}}
+		<div class="panel {{if eq .ID $curGroup}}panel-primary{{else}}panel-default{{end}}">
+			<a class="panel-heading collapsed" role="tab" id="heading{{.ID}}" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapse{{.ID}}" aria-expanded="false" aria-controls="collapse{{.ID}}">
+				<h4 class="panel-title">{{.Name}}</h4>
 			</a>
-			<div id="collapseMain" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingMain">
+			<div id="collapse{{.ID}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{.ID}}">
 				<div class="panel-body">
 					<ul class="nav nav-sidebar">
-						<li class="active"><a href="#">Main <span class="sr-only">(Current)</span></a></li>
-						<li><a href="#">BJ</a></li>
-						<li><a href="#">M6</a></li>
-						<li><a href="#">SX</a></li>
+						{{range .Subs}}
+						{{if eq .ID $curSub}}
+						<li class="active"><a class="btn-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
+						{{else}}
+						<li><a class="btn-default" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
+						{{end}}
 					</ul>
 				</div>
 			</div>
 		</div>
-		<div class="panel panel-default">
-			<a class="panel-heading collapsed" role="tab" id="headingSub" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapseSub" aria-expanded="false" aria-controls="collapseSub">
-				<h4 class="panel-title">
-						Sub
-				</h4>
-			</a>
-			<div id="collapseSub" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSub">
-				<div class="panel-body">
-
-					<ul class="nav nav-sidebar">
-						<li><a href="">Sub</a></li>
-						<li><a href="">BJ-01</a></li>
-						<li><a href="">BJ-02</a></li>
-						<li><a href="">M6-01</a></li>
-						<li><a href="">M6-02</a></li>
-						<li><a href="">SH-01</a></li>
-						<li><a href="">SH-02</a></li>
-						<li><a href="">SX-01</a></li>
-						<li><a href="">SX-02</a></li>
-					</ul>
-				</div>
-			</div>
-		</div>
+		{{end}}
+		{{end}}
 	</div>
 </div>

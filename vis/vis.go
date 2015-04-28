@@ -23,11 +23,19 @@ type Config struct {
 	PortalAddr  string
 }
 
+type NodeGroup struct {
+	ID   int64
+	PID  int64
+	Name string
+	Subs map[int64]NodeGroup
+}
+
 type Vis struct {
-	root    string
-	appName string
-	config  Config
-	db      *sql.DB
+	root       string
+	appName    string
+	config     Config
+	db         *sql.DB
+	nodeGroups map[int64]NodeGroup
 }
 
 func (v *Vis) Init(root, appName string) (err error) {
@@ -77,23 +85,21 @@ func (v *Vis) clearHistory() {
 
 func (v *Vis) Run() {
 
+	subTasks := []func(){
+		v.runMonitor,
+		v.runPortal,
+		v.clearHistory,
+	}
+
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(len(subTasks))
 
-	go func() {
-		defer wg.Done()
-		v.runMonitor()
-	}()
-
-	go func() {
-		defer wg.Done()
-		v.runPortal()
-	}()
-
-	go func() {
-		defer wg.Done()
-		v.clearHistory()
-	}()
+	for _, st := range subTasks {
+		go func() {
+			defer wg.Done()
+			st()
+		}()
+	}
 
 	wg.Wait()
 }

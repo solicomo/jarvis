@@ -1,58 +1,52 @@
-				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-					<h1 class="page-header">Overview</h1>
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+	<h1 class="page-header">Dashboard</h1>
 
-					<div class="row placeholders">
-						<div class="col-xs-6 col-sm-3 placeholder">
-							<img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
-							<h4>Label</h4>
-							<span class="text-muted">Something else</span>
-						</div>
-						<div class="col-xs-6 col-sm-3 placeholder">
-							<img data-src="holder.js/200x200/auto/vine" class="img-responsive" alt="Generic placeholder thumbnail">
-							<h4>Label</h4>
-							<span class="text-muted">Something else</span>
-						</div>
-						<div class="col-xs-6 col-sm-3 placeholder">
-							<img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
-							<h4>Label</h4>
-							<span class="text-muted">Something else</span>
-						</div>
-						<div class="col-xs-6 col-sm-3 placeholder">
-							<img data-src="holder.js/200x200/auto/vine" class="img-responsive" alt="Generic placeholder thumbnail">
-							<h4>Label</h4>
-							<span class="text-muted">Something else</span>
-						</div>
-					</div>
+	{{if .Overviews}}
+	<h2 class="sub-header">Overviews</h2>
+	<div class="row overviews">
+		{{range .Overviews}}
+		<div class="col-xs-6 col-sm-3 overviews">
+			<img data-src="holder.js/200x200/auto/random/text:{{.Caption}}" class="img-responsive" alt="{{.Name}}">
+			<h4>{{.Name}}</h4>
+			<span class="text-muted">{{.Description}}</span>
+		</div>
+		{{end}}
+	</div>
+	{{end}}
 
-					<h2 class="sub-header">Status</h2>
-					<div class="table-responsive">
-						<table class="table table-striped">
-							<thead>
-								<tr>
-									<th>Node</th>
-									<th>Addr</th>
-									<th>Uptime</th>
-									<th>Core</th>
-									<th>Mem</th>
-									<th>Disk</th>
-									<th>OS</th>
-									<th>CPU</th>
-								</tr>
-							</thead>
-							<tbody>
-								{{range .Nodes.Info}}
-								<tr>
-									<td>{{.Name}}</td>
-									<td>{{.Addr}}</td>
-									<td>{{.Uptime}}</td>
-									<td>{{.Core}}</td>
-									<td>{{.Mem}} MB</td>
-									<td>{{.Disk}} MB</td>
-									<td>{{.OS}}</td>
-									<td>{{.CPU}}</td>
-								</tr>
-								{{end}}
-							</tbody>
-						</table>
-					</div>
-				</div>
+	{{if .Nodes}}
+	<h2 class="sub-header">Nodes</h2>
+	<div class="table-responsive">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Node</th>
+					<th>Addr</th>
+					<th>Uptime</th>
+					<th>Core</th>
+					<th>Mem</th>
+					<th>Disk</th>
+					<th>OS</th>
+					<th>CPU</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{range .Nodes}}
+				{{with .Info}}
+				<tr>
+					<td>{{.Name}}</td>
+					<td>{{.Addr}}</td>
+					<td>{{.Uptime}}</td>
+					<td>{{.Core}}</td>
+					<td>{{.Mem}} MB</td>
+					<td>{{.Disk}} MB</td>
+					<td>{{.OS}}</td>
+					<td>{{.CPU}}</td>
+				</tr>
+				{{end}}
+				{{end}}
+			</tbody>
+		</table>
+	</div>
+	{{end}}
+</div>

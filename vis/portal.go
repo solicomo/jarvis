@@ -1,8 +1,10 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
@@ -13,7 +15,7 @@ import (
 )
 
 const (
-	SQL_SELECT_NODES_INFO  = `SELECT name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE group = ?;`
+	SQL_SELECT_NODES_INFO  = `SELECT name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ?;`
 	SQL_SELECT_NODE_GROUPS = `SELECT id, pid, name FROM groups ORDER by level, id;`
 )
 
@@ -32,8 +34,12 @@ func (v *Vis) runPortal() {
 		Extensions: []string{".gohtml", ".tmpl", ".html"},
 	}))
 
-	m.Get("/dashboard", martiniSafeHandler("dashboard", v.handleDashboardIndex))
 	m.Get("/dashboard/:group/:gname", martiniSafeHandler("dashboard", v.handleDashboardGroup))
+
+	m.Get("/dashboard/overviews", martiniSafeHandler("dashboard", v.handleDashboardOverviews))
+	m.Get("/**", func(w http.ResponseWriter, r *http.Request){
+		http.Redirect(w, r, "/dashboard/overviews", http.StatusTemporaryRedirect)
+	})
 
 	m.RunOnAddr(v.config.PortalAddr)
 }
@@ -61,25 +67,35 @@ func (v *Vis) loadNodeGroups() (err error) {
 
 		// 当前只支持 2 级
 		if group.PID == 0 {
+			group.Subs = make(map[int64]NodeGroup)
 			v.nodeGroups[group.ID] = group
-			v.nodeGroups[group.ID].Subs = make(map[int64]NodeGroup)
 		} else {
 
-			subs, ok := v.nodeGroups[group.PID]
+			g, ok := v.nodeGroups[group.PID]
 			if ok {
-				subs[group.ID] = group
+				g.Subs[group.ID] = group
 			}
 		}
 	}
 
 	err = rows.Err()
+
+	for k, g := range v.nodeGroups {
+		log.Println("[DEBU]", k, "=>", g.Name)
+		for i, s := range g.Subs {
+			log.Println("[DEBU]\t", i, "=>", s.Name)
+		}
+	}
+	return
 }
 
-func (v *Vis) handleDashboardIndex(req *http.Request, params martini.Params, data map[string]interface{}) {
+func (v *Vis) handleDashboardOverviews(req *http.Request, params martini.Params, data map[string]interface{}) {
 
 	data["Status"] = "200"
 	data["Title"] = "Dashboard"
 	data["Groups"] = v.nodeGroups
+	data["CurSubGroup"] = 0
+	data["CurGroup"] = 0
 
 	type Overview struct {
 		Name        string
@@ -119,8 +135,10 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 	data["Title"] = gname + " | Dashboard"
 	data["Groups"] = v.nodeGroups
 	data["CurSubGroup"] = group
+	data["CurSubGroupName"] = gname
 
-	pg := "1"
+	var pg int64
+	pg = 1
 	for id, g := range v.nodeGroups {
 		if _, ok := g.Subs[group]; ok {
 			pg = id

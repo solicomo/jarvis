@@ -59,6 +59,13 @@ body {
 	padding: 0;
 }
 
+.nav-sidebar > li > a:hover,
+.nav-sidebar > li > a:focus {
+	color: #fff;
+	background-color: #5bc0de;
+	border-color: #46b8da;
+}
+
 /*
  * Main content
  */

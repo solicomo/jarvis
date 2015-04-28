@@ -1,21 +1,21 @@
 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-	<h1 class="page-header">Dashboard</h1>
+	<!--h1 class="page-header">Dashboard</h1 -->
 
 	{{if .Overviews}}
-	<h2 class="sub-header">Overviews</h2>
+	<h1 class="page-header">Overviews</h1>
 	<div class="row overviews">
 		{{range .Overviews}}
 		<div class="col-xs-6 col-sm-3 overviews">
-			<img data-src="holder.js/200x200/auto/random/text:{{.Caption}}" class="img-responsive" alt="{{.Name}}">
+			<img data-src="holder.js/200x200/auto/random/size:36/text:{{.Caption}}" class="img-responsive" alt="{{.Name}}">
 			<h4>{{.Name}}</h4>
 			<span class="text-muted">{{.Description}}</span>
 		</div>
 		{{end}}
 	</div>
-	{{end}}
+	{{else}}
 
 	{{if .Nodes}}
-	<h2 class="sub-header">Nodes</h2>
+	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
 	<div class="table-responsive">
 		<table class="table table-striped">
 			<thead>
@@ -48,5 +48,9 @@
 			</tbody>
 		</table>
 	</div>
+	{{else}}
+	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
+	<div><p>No node in this group.</p></div>
+	{{end}}
 	{{end}}
 </div>

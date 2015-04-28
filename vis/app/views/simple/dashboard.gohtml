@@ -2,7 +2,7 @@
 {{template "header"}}
 
 
-{{template "sidebar"}}
+{{template "sidebar" .}}
 
 {{if eq .Status "200"}}
 	{{template "main" .}}

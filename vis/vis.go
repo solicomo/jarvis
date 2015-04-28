@@ -85,21 +85,23 @@ func (v *Vis) clearHistory() {
 
 func (v *Vis) Run() {
 
-	subTasks := []func(){
-		v.runMonitor,
-		v.runPortal,
-		v.clearHistory,
-	}
-
 	var wg sync.WaitGroup
-	wg.Add(len(subTasks))
+	wg.Add(3)
 
-	for _, st := range subTasks {
-		go func() {
-			defer wg.Done()
-			st()
-		}()
-	}
+	go func() {
+		defer wg.Done()
+		v.runMonitor()
+	}()
+
+	go func() {
+		defer wg.Done()
+		v.runPortal()
+	}()
+
+	go func() {
+		defer wg.Done()
+		v.clearHistory()
+	}()
 
 	wg.Wait()
 }

@@ -1,13 +1,19 @@
 <div class="col-sm-3 col-md-2 sidebar">
+	<div class="panel panel-primary">
+		<a class="panel-heading" href="/dashboard">
+			<h4 class="panel-title">Overviews</h4>
+		</a>
+	</div>
 	<div class="panel-group" id="sidebarAccordion" role="tablist" aria-multiselectable="true">
-		{{$curGroup, $curSub := .CurGroup, .CurSubGroup}}
+		{{$curGroup := .CurGroup}}
+		{{$curSub := .CurSubGroup}}
 		{{range .Groups}}
-		{{ne .ID 1 or len .Subs | if}}
-		<div class="panel {{if eq .ID $curGroup}}panel-primary{{else}}panel-default{{end}}">
-			<a class="panel-heading collapsed" role="tab" id="heading{{.ID}}" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapse{{.ID}}" aria-expanded="false" aria-controls="collapse{{.ID}}">
+		{{if or (ne .ID 1) (len .Subs)}}
+		<div class="panel panel-primary">
+			<a class="panel-heading {{if ne .ID $curGroup}}collapsed{{end}}" role="tab" id="heading{{.ID}}" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapse{{.ID}}" aria-expanded="{{if ne .ID $curGroup}}false{{else}}true{{end}}" aria-controls="collapse{{.ID}}">
 				<h4 class="panel-title">{{.Name}}</h4>
 			</a>
-			<div id="collapse{{.ID}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{.ID}}">
+			<div id="collapse{{.ID}}" class="panel-collapse collapse {{if eq .ID $curGroup}}in{{end}}" role="tabpanel" aria-labelledby="heading{{.ID}}">
 				<div class="panel-body">
 					<ul class="nav nav-sidebar">
 						{{range .Subs}}
@@ -15,6 +21,7 @@
 						<li class="active"><a class="btn-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
 						{{else}}
 						<li><a class="btn-default" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
+						{{end}}
 						{{end}}
 					</ul>
 				</div>
@@ -24,3 +31,4 @@
 		{{end}}
 	</div>
 </div>
+

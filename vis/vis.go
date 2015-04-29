@@ -31,11 +31,12 @@ type NodeGroup struct {
 }
 
 type Vis struct {
-	root       string
-	appName    string
-	config     Config
-	db         *sql.DB
-	nodeGroups map[int64]NodeGroup
+	root            string
+	appName         string
+	config          Config
+	db              *sql.DB
+	nodeGroups      map[int64]NodeGroup
+	nodeGroupsMutex sync.RWMutex
 }
 
 func (v *Vis) Init(root, appName string) (err error) {
@@ -76,6 +77,13 @@ func (v *Vis) initDB() (err error) {
 	return
 }
 
+func (v *Vis) updateNodeGroups() {
+
+	for _ = range time.Tick(1 * time.Minute) {
+		v.loadNodeGroups()
+	}
+}
+
 func (v *Vis) clearHistory() {
 
 	for _ = range time.Tick(1 * time.Hour) {
@@ -86,7 +94,7 @@ func (v *Vis) clearHistory() {
 func (v *Vis) Run() {
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -96,6 +104,11 @@ func (v *Vis) Run() {
 	go func() {
 		defer wg.Done()
 		v.runPortal()
+	}()
+
+	go func() {
+		defer wg.Done()
+		v.updateNodeGroups()
 	}()
 
 	go func() {

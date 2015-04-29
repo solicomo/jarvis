@@ -17,7 +17,7 @@
 	{{if .Nodes}}
 	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
 	<div class="table-responsive">
-		<table class="table table-striped">
+		<table id="nodelist" role="tablist" aria-multiselectable="true" class="panel-group table table-striped table-hover">
 			<thead>
 				<tr>
 					<th>Node</th>
@@ -30,10 +30,11 @@
 					<th>CPU</th>
 				</tr>
 			</thead>
-			<tbody>
-				{{range .Nodes}}
+			{{range .Nodes}}
+			<tbody class="panel">
+				
 				{{with .Info}}
-				<tr>
+				<tr class="panel-heading collapsed" role="tab" id="nodeinfo{{.ID}}" data-toggle="collapse" data-parent="#nodelist" href="#collapse{{.ID}}" aria-expanded="false" aria-controls="collapse{{.ID}}">
 					<td>{{.Name}}</td>
 					<td>{{.Addr}}</td>
 					<td>{{.Uptime}}</td>
@@ -43,9 +44,26 @@
 					<td>{{.OS}}</td>
 					<td>{{.CPU}}</td>
 				</tr>
+				<tr id="collapse{{.ID}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="nodeinfo{{.ID}}">
+					<td class="panel-body" colspan="8">
+						There are details. There are details. There are details.
+						<ul style="list-style: none;">
+							<li>
+								<ul style="list-style: none;"><li>1</li><li>2</li></ul>
+							</li>
+							<li>
+								<ul style="list-style: none;"><li>1</li><li>2</li><li>3</li></ul>
+							</li>
+							<li>
+								<ul style="list-style: none;"><li>1</li><li>2</li><li>3</li><li>4</li></ul>
+							</li>
+						</ul>
+					</td>
+				</tr>
 				{{end}}
-				{{end}}
+				
 			</tbody>
+			{{end}}
 		</table>
 	</div>
 	{{else}}

@@ -43,7 +43,7 @@ const (
 	// 		WHERE b.atime > n.atime AND b.node = n.id AND n.id = ?);`
 
 	SQL_CLEAR_HISTORY = `DELETE FROM metric_records WHERE 
-		julianday(datetime('now','localtime')) - julianday(ctime) > 365;`
+		julianday(datetime('now','localtime')) - julianday(ctime) > 30;`
 )
 
 func (v *Vis) runMonitor() {

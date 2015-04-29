@@ -21,6 +21,7 @@ type MetricConfig struct {
 }
 
 type NodeInfo struct {
+	ID     int64
 	Name   string
 	Type   string
 	Addr   string

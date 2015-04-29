@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	SQL_SELECT_NODES_INFO  = `SELECT name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ?;`
+	SQL_SELECT_NODES_INFO  = `SELECT id, name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ? ORDER BY id;`
 	SQL_SELECT_NODE_GROUPS = `SELECT id, pid, name FROM groups ORDER by level, id;`
 )
 
@@ -37,7 +37,7 @@ func (v *Vis) runPortal() {
 	m.Get("/dashboard/:group/:gname", martiniSafeHandler("dashboard", v.handleDashboardGroup))
 
 	m.Get("/dashboard/overviews", martiniSafeHandler("dashboard", v.handleDashboardOverviews))
-	m.Get("/**", func(w http.ResponseWriter, r *http.Request){
+	m.Get("/**", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard/overviews", http.StatusTemporaryRedirect)
 	})
 
@@ -53,6 +53,9 @@ func (v *Vis) loadNodeGroups() (err error) {
 	}
 
 	defer rows.Close()
+
+	v.nodeGroupsMutex.Lock()
+	defer v.nodeGroupsMutex.Unlock()
 
 	v.nodeGroups = make(map[int64]NodeGroup)
 
@@ -90,6 +93,9 @@ func (v *Vis) loadNodeGroups() (err error) {
 }
 
 func (v *Vis) handleDashboardOverviews(req *http.Request, params martini.Params, data map[string]interface{}) {
+
+	v.nodeGroupsMutex.RLock()
+	defer v.nodeGroupsMutex.RUnlock()
 
 	data["Status"] = "200"
 	data["Title"] = "Dashboard"
@@ -131,6 +137,9 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 		group, _ = strconv.ParseInt(gid, 10, 0)
 	}
 
+	v.nodeGroupsMutex.RLock()
+	defer v.nodeGroupsMutex.RUnlock()
+
 	data["Status"] = "200"
 	data["Title"] = gname + " | Dashboard"
 	data["Groups"] = v.nodeGroups
@@ -164,7 +173,7 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 
 		var node Node
 
-		err = rows.Scan(&node.Info.Name, &node.Info.Type, &node.Info.Addr, &node.Info.OS,
+		err = rows.Scan(&node.Info.ID, &node.Info.Name, &node.Info.Type, &node.Info.Addr, &node.Info.OS,
 			&node.Info.CPU, &node.Info.Core, &node.Info.Mem, &node.Info.Disk, &node.Info.Uptime)
 		check(err)
 

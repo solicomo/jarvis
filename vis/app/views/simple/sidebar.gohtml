@@ -4,16 +4,16 @@
 			<h4 class="panel-title">Overviews</h4>
 		</a>
 	</div>
-	<div class="panel-group" id="sidebarAccordion" role="tablist" aria-multiselectable="true">
+	<div class="panel-group" id="sidebar-nodegroup" role="tablist" aria-multiselectable="true">
 		{{$curGroup := .CurGroup}}
 		{{$curSub := .CurSubGroup}}
 		{{range .Groups}}
 		{{if or (ne .ID 1) (len .Subs)}}
 		<div class="panel panel-primary">
-			<a class="panel-heading {{if ne .ID $curGroup}}collapsed{{end}}" role="tab" id="heading{{.ID}}" data-toggle="collapse" data-parent="#sidebarAccordion" href="#collapse{{.ID}}" aria-expanded="{{if ne .ID $curGroup}}false{{else}}true{{end}}" aria-controls="collapse{{.ID}}">
+			<a class="panel-heading {{if ne .ID $curGroup}}collapsed{{end}}" role="tab" id="sbng-heading{{.ID}}" data-toggle="collapse" data-parent="#sidebar-nodegroup" href="#sbng-collapse{{.ID}}" aria-expanded="{{if ne .ID $curGroup}}false{{else}}true{{end}}" aria-controls="sbng-collapse{{.ID}}">
 				<h4 class="panel-title">{{.Name}}</h4>
 			</a>
-			<div id="collapse{{.ID}}" class="panel-collapse collapse {{if eq .ID $curGroup}}in{{end}}" role="tabpanel" aria-labelledby="heading{{.ID}}">
+			<div id="sbng-collapse{{.ID}}" class="panel-collapse collapse {{if eq .ID $curGroup}}in{{end}}" role="tabpanel" aria-labelledby="sbng-heading{{.ID}}">
 				<div class="panel-body">
 					<ul class="nav nav-sidebar">
 						{{range .Subs}}

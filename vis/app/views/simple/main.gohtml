@@ -15,7 +15,7 @@
 	{{else}}
 
 	{{if .Nodes}}
-	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
+	<h1 class="page-header">Nodes - {{.CurGroupName}}</h1>
 	<div>
 		<table id="node-list" role="tablist" aria-multiselectable="true" class="node-list panel-group table table-hover">
 			<thead>
@@ -78,7 +78,7 @@
 		</table>
 	</div>
 	{{else}}
-	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
+	<h1 class="page-header">Nodes - {{.CurGroupName}}</h1>
 	<div><p>No node in this group.</p></div>
 	{{end}}
 	{{end}}

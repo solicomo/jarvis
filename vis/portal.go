@@ -85,6 +85,14 @@ func (v *Vis) loadNodeGroups() (err error) {
 
 	err = rows.Err()
 
+	//
+	ungroup, ok := v.nodeGroups[1]
+	if ok {
+		if len(ungroup.Subs) == 0 {
+			delete(v.nodeGroups, 1)
+		}
+	}
+
 	return
 }
 
@@ -117,6 +125,7 @@ func (v *Vis) handleDashboardOverviews(req *http.Request, params martini.Params,
 	}
 
 	data["Overviews"] = overviews
+	data["Nodes"] = v.loadNodesInGroup(1)
 
 }
 
@@ -139,19 +148,12 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 	data["Status"] = "200"
 	data["Title"] = gname + " | Dashboard"
 	data["Groups"] = v.nodeGroups
-	data["CurSubGroup"] = group
-	data["CurSubGroupName"] = gname
+	data["CurGroup"] = group
+	data["CurGroupName"] = gname
+	data["Nodes"] = v.loadNodesInGroup(group)
+}
 
-	var pg int64
-	pg = 1
-	for id, g := range v.nodeGroups {
-		if _, ok := g.Subs[group]; ok {
-			pg = id
-			break
-		}
-	}
-
-	data["CurGroup"] = pg
+func (v *Vis) loadNodesInGroup(group int64) (nodes interface{}, err error) {
 
 	type Metric struct {
 		ID     int64
@@ -165,7 +167,7 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 		Metrics map[int64]Metric
 	}
 
-	nodes := make(map[int64]Node)
+	nodes = make(map[int64]Node)
 
 	rows, err := v.db.Query(SQL_SELECT_NODES_INFO, group)
 	check(err)
@@ -213,6 +215,4 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 
 		nodes[id] = node
 	}
-
-	data["Nodes"] = nodes
 }

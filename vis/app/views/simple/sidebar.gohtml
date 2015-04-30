@@ -6,7 +6,6 @@
 	</div>
 	<div class="panel-group" id="sidebar-nodegroup" role="tablist" aria-multiselectable="true">
 		{{$curGroup := .CurGroup}}
-		{{$curSub := .CurSubGroup}}
 		{{range .Groups}}
 		{{if or (ne .ID 1) (len .Subs)}}
 		<div class="panel panel-primary">
@@ -17,7 +16,7 @@
 				<div class="panel-body">
 					<ul class="nav nav-sidebar">
 						{{range .Subs}}
-						{{if eq .ID $curSub}}
+						{{if eq .ID $curGroup}}
 						<li class="active"><a class="btn-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
 						{{else}}
 						<li><a class="btn-default" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>

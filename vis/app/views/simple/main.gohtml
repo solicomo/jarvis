@@ -16,8 +16,8 @@
 
 	{{if .Nodes}}
 	<h1 class="page-header">Nodes - {{.CurSubGroupName}}</h1>
-	<div class="table-responsive">
-		<table id="nodelist" role="tablist" aria-multiselectable="true" class="panel-group table table-striped table-hover">
+	<div>
+		<table id="node-list" role="tablist" aria-multiselectable="true" class="node-list panel-group table table-hover">
 			<thead>
 				<tr>
 					<th>Node</th>
@@ -31,10 +31,10 @@
 				</tr>
 			</thead>
 			{{range .Nodes}}
-			<tbody class="panel">
+			<tbody class="node-info panel">
 				
 				{{with .Info}}
-				<tr data-toggle="collapse" href="#collapse{{.ID}}" aria-expanded="false" aria-controls="collapse{{.ID}}">
+				<tr class="active" data-toggle="collapse" href="#collapse{{.ID}}" aria-expanded="false" aria-controls="collapse{{.ID}}">
 					<td>{{.Name}}</td>
 					<td>{{.Addr}}</td>
 					<td>{{.Uptime}}</td>
@@ -45,18 +45,19 @@
 					<td>{{.CPU}}</td>
 				</tr>
 			</tbody>
-			<tbody class="collapse" id="collapse{{.ID}}">
+			<tbody class="node-metrics collapse" id="collapse{{.ID}}">
 				{{end}}
 
 				{{range .Metrics}}
 				<tr>
-					<td>
+					<td class="borderless" style="border: none;"></td>
+					<td class="metric-name">
 						{{.Name}}
 					</td>
-					<td colspan="7">
+					<td colspan="6">
 						{{if len .Values}}
 						<ul>
-							{{range $k, $v := Values}}
+							{{range $k, $v := .Values}}
 							<li>
 								<div class="input-group">
 									<span class="input-group-addon">{{$k}}</span>

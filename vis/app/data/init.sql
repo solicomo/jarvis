@@ -53,7 +53,7 @@ INSERT INTO default_metrics (id, interval, params) VALUES (10, 600, "");
 DROP TABLE IF EXISTS nodes;
 CREATE TABLE nodes (
 	id INTEGER PRIMARY KEY NOT NULL,
-	gid INTEGER DEFAULT 1,
+	gid INTEGER DEFAULT 2,
 	addr VARCHAR(255) UNIQUE NOT NULL,
 	type VARCHAR(255),
 	name VARCHAR(255) UNIQUE,
@@ -75,20 +75,21 @@ CREATE TABLE groups (
 	name VARCHAR(255)
 	);
 
-INSERT INTO groups (id, pid, level, name) VALUES (1, 0, 0, "Ungrouped");
-INSERT INTO groups (id, pid, level, name) VALUES (2, 0, 0, "Main");
-INSERT INTO groups (id, pid, level, name) VALUES (3, 0, 0, "Sub");
-INSERT INTO groups (id, pid, level, name) VALUES (4, 2, 1, "BJ");
-INSERT INTO groups (id, pid, level, name) VALUES (5, 2, 1, "M6");
-INSERT INTO groups (id, pid, level, name) VALUES (6, 2, 1, "SX");
-INSERT INTO groups (id, pid, level, name) VALUES (7, 3, 1, "BJ-01");
-INSERT INTO groups (id, pid, level, name) VALUES (8, 3, 1, "BJ-02");
-INSERT INTO groups (id, pid, level, name) VALUES (9, 3, 1, "M6-01");
-INSERT INTO groups (id, pid, level, name) VALUES (10, 3, 1, "M6-02");
-INSERT INTO groups (id, pid, level, name) VALUES (11, 3, 1, "SX-01");
-INSERT INTO groups (id, pid, level, name) VALUES (12, 3, 1, "SX-01");
-INSERT INTO groups (id, pid, level, name) VALUES (13, 3, 1, "SH-01");
-INSERT INTO groups (id, pid, level, name) VALUES (14, 3, 1, "SH-01");
+INSERT INTO groups (id, pid, level, name) VALUES (1, 0, 0, "Others");
+INSERT INTO groups (id, pid, level, name) VALUES (2, 1, 0, "Ungrouped");
+INSERT INTO groups (id, pid, level, name) VALUES (3, 0, 0, "Main");
+INSERT INTO groups (id, pid, level, name) VALUES (4, 0, 0, "Sub");
+INSERT INTO groups (id, pid, level, name) VALUES (5, 3, 1, "BJ");
+INSERT INTO groups (id, pid, level, name) VALUES (6, 3, 1, "M6");
+INSERT INTO groups (id, pid, level, name) VALUES (7, 3, 1, "SX");
+INSERT INTO groups (id, pid, level, name) VALUES (8, 4, 1, "BJ-01");
+INSERT INTO groups (id, pid, level, name) VALUES (9, 4, 1, "BJ-02");
+INSERT INTO groups (id, pid, level, name) VALUES (10, 4, 1, "M6-01");
+INSERT INTO groups (id, pid, level, name) VALUES (11, 4, 1, "M6-02");
+INSERT INTO groups (id, pid, level, name) VALUES (12, 4, 1, "SX-01");
+INSERT INTO groups (id, pid, level, name) VALUES (13, 4, 1, "SX-01");
+INSERT INTO groups (id, pid, level, name) VALUES (14, 4, 1, "SH-01");
+INSERT INTO groups (id, pid, level, name) VALUES (15, 4, 1, "SH-01");
 
 DROP TABLE IF EXISTS metric_bindings;
 CREATE TABLE metric_bindings (

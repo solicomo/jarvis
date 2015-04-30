@@ -95,7 +95,27 @@ body {
 .overviews h4 {
 	margin-bottom: 0;
 }
+
 .overviews img {
 	display: inline-block;
 	border-radius: 50%;
+}
+
+.borderless {
+	border: none;
+}
+
+.node-metrics ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.node-metrics li {
+	display: inline-block;
+}
+
+.metric-name {
+	font-weight: bold;
+	/*text-align: right;*/
 }

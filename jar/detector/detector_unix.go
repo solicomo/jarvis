@@ -3,13 +3,16 @@
 package detector
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/likexian/host-stat-go"
-	"github.com/toolkits/nux"
+	"log"
 	"math"
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"github.com/likexian/host-stat-go"
+	"github.com/toolkits/nux"
 )
 
 func int8ToString(bs []int8) string {
@@ -31,9 +34,9 @@ func Round(data float64, precision int) (result float64) {
 	return
 }
 
-func (Detector) BaseMetrics() (result string, err error) {
+func (d Detector) BaseMetrics() (result string, err error) {
 
-	bm := struct {
+	var bm struct {
 		Load      string
 		CPURate   string
 		MemRate   string
@@ -43,17 +46,17 @@ func (Detector) BaseMetrics() (result string, err error) {
 		DiskWrite string
 		NetRead   string
 		NetWrite  string
-	}{
-		Load(),
-		CPURate(),
-		MemRate(),
-		SwapRate(),
-		DiskRate(),
-		DiskRead(),
-		DiskWrite(),
-		NetRead(),
-		NetWrite(),
 	}
+
+	bm.Load, _ = d.Load()
+	bm.CPURate, _ = d.CPURate()
+	bm.MemRate, _ = d.MemRate()
+	bm.SwapRate, _ = d.SwapRate()
+	bm.DiskRate, _ = d.DiskRate()
+	bm.DiskRead, _ = d.DiskRead()
+	bm.DiskWrite, _ = d.DiskWrite()
+	bm.NetRead, _ = d.NetRead()
+	bm.NetWrite, _ = d.NetWrite()
 
 	data, err := json.Marshal(bm)
 
@@ -64,6 +67,8 @@ func (Detector) BaseMetrics() (result string, err error) {
 	}
 
 	result = string(data[:])
+
+	return
 }
 
 func (Detector) OSVer(params ...string) (result string, err error) {

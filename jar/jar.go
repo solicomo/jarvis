@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 
@@ -32,11 +33,11 @@ type Metric struct {
 }
 
 type Jar struct {
-	ID           string
+	ID           int64
 	root         string
 	appName      string
 	config       Config
-	Metrics      map[int64]jarvis.MetricConfig
+	Metrics      map[string]jarvis.MetricConfig
 	MetricsMutex sync.RWMutex
 }
 
@@ -83,7 +84,7 @@ func (j *Jar) Run() {
 
 	go j.ping()
 
-	for _ = range time.Tick(10 * time.Minute) {
+	for _ = range time.Tick(10 * time.Second) {
 
 		go j.report()
 	}
@@ -131,7 +132,7 @@ func (j *Jar) login() (err error) {
 	j.ID = logRsp.ID
 	j.Metrics = logRsp.Metrics
 
-	log.Println("[INFO]", "login success, this is ", logRsp.ID)
+	log.Println("[INFO]", "login success, this is", logRsp.ID)
 	return
 }
 
@@ -177,7 +178,7 @@ func (j *Jar) report() {
 	metricConfigChan := make(chan jarvis.MetricConfig, metricCount)
 	metricChan := make(chan Metric, metricCount)
 
-	for name, config := range j.Metrics {
+	for _, config := range j.Metrics {
 
 		go j.detect(metricConfigChan, metricChan)
 
@@ -192,7 +193,7 @@ func (j *Jar) report() {
 
 	for i := 0; i < metricCount; i++ {
 		metric := <-metricChan
-		report.Metrics[metric.ID] = metric.Value
+		report.Metrics[strconv.FormatInt(metric.ID, 10)] = metric.Value
 	}
 
 	j.postTo(jarvis.URL_REPORT, report)
@@ -255,7 +256,7 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 	case "url":
 		{
 			detectorPath := path.Join(j.root, "cache/detector")
-			detectorFile := path.Join(detectorPath, metricConf.Name)
+			detectorFile := path.Join(detectorPath, strconv.FormatInt(metricConf.ID, 10))
 
 			fileData, err := ioutil.ReadFile(detectorFile)
 

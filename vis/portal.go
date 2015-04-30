@@ -85,12 +85,6 @@ func (v *Vis) loadNodeGroups() (err error) {
 
 	err = rows.Err()
 
-	for k, g := range v.nodeGroups {
-		log.Println("[DEBU]", k, "=>", g.Name)
-		for i, s := range g.Subs {
-			log.Println("[DEBU]\t", i, "=>", s.Name)
-		}
-	}
 	return
 }
 
@@ -192,10 +186,12 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 	err = rows.Err()
 	check(err)
 
-	for id, _ := range nodes {
+	for id, node := range nodes {
 
 		crows, err := v.db.Query(SQL_SELECT_CURRENT_METRICS, id)
 		check(err)
+
+		node.Metrics = make(map[int64]Metric)
 
 		defer crows.Close()
 
@@ -206,14 +202,16 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 			err = crows.Scan(&metric.ID, &metric.Name, &metric.Value)
 			check(err)
 
-			json.Unmarshal(metric.Value, &metric.Values)
+			metric.Values = make(map[string]string)
+			json.Unmarshal([]byte(metric.Value), &metric.Values)
 
-			nodes[id].Metrics[metric.ID] = metric
+			node.Metrics[metric.ID] = metric
 		}
 
 		err = crows.Err()
 		check(err)
 
+		nodes[id] = node
 	}
 
 	data["Nodes"] = nodes

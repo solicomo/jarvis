@@ -38,17 +38,17 @@ type Login struct {
 }
 
 type LoginRsp struct {
-	ID      string
-	Metrics map[int64]MetricConfig
+	ID      int64
+	Metrics map[string]MetricConfig
 }
 
 type Ping struct {
-	ID     string
+	ID     int64
 	Uptime string
 }
 
 type PingRsp struct {
-	Metrics map[int64]MetricConfig
+	Metrics map[string]MetricConfig
 }
 
 type CommonRsp struct {
@@ -61,6 +61,6 @@ const (
 )
 
 type MetricReport struct {
-	ID      string
-	Metrics map[int64]string
+	ID      int64 
+	Metrics map[string]string
 }

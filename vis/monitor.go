@@ -137,7 +137,7 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	var loginRsp jarvis.LoginRsp
 
-	loginRsp.ID = strconv.FormatInt(nodeID, 10)
+	loginRsp.ID = nodeID
 	loginRsp.Metrics = make(map[string]jarvis.MetricConfig)
 
 	for rows.Next() {
@@ -153,7 +153,7 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 			check(err)
 		}
 
-		loginRsp.Metrics[metric.Name] = metric
+		loginRsp.Metrics[strconv.FormatInt(metric.ID, 10)] = metric
 	}
 
 	check(rows.Err())
@@ -173,6 +173,7 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 
 	var ping jarvis.Ping
 
+	log.Println("[DEBU]", string(body[:]))
 	err = json.Unmarshal(body, &ping)
 	check(err)
 
@@ -200,7 +201,7 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 			check(err)
 		}
 
-		pingRsp.Metrics[metric.Name] = metric
+		pingRsp.Metrics[strconv.FormatInt(metric.ID, 10)] = metric
 	}
 
 	check(rows.Err())
@@ -236,9 +237,21 @@ func (v *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 			log.Println("[WARN]", "new metric record:", report.ID, id, value, err)
 		}
 
-		_, err = v.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
+		r, err := v.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
+
+		up := true
 
 		if err != nil {
+			up = false
+		} else {
+			c, e := r.RowsAffected()
+			if e != nil || c < 1 {
+				up = false
+				err = e
+			}
+		}
+
+		if !up {
 			log.Println("[WARN]", "update current metric record:", report.ID, id, value, err)
 
 			_, err = v.db.Exec(SQL_NEW_CURRENT_METRIC, report.ID, id, value)

@@ -125,8 +125,6 @@ func (v *Vis) handleDashboardOverviews(req *http.Request, params martini.Params,
 	}
 
 	data["Overviews"] = overviews
-	data["Nodes"] = v.loadNodesInGroup(1)
-
 }
 
 func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, data map[string]interface{}) {
@@ -153,7 +151,7 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 	data["Nodes"] = v.loadNodesInGroup(group)
 }
 
-func (v *Vis) loadNodesInGroup(group int64) (nodes interface{}, err error) {
+func (v *Vis) loadNodesInGroup(group int64) interface{} {
 
 	type Metric struct {
 		ID     int64
@@ -167,7 +165,7 @@ func (v *Vis) loadNodesInGroup(group int64) (nodes interface{}, err error) {
 		Metrics map[int64]Metric
 	}
 
-	nodes = make(map[int64]Node)
+	nodes := make(map[int64]Node)
 
 	rows, err := v.db.Query(SQL_SELECT_NODES_INFO, group)
 	check(err)
@@ -215,4 +213,6 @@ func (v *Vis) loadNodesInGroup(group int64) (nodes interface{}, err error) {
 
 		nodes[id] = node
 	}
+
+	return nodes
 }

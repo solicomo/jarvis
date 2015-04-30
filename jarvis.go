@@ -13,7 +13,7 @@ const (
 )
 
 type MetricConfig struct {
-	Name     string
+	ID       int64
 	Type     string
 	Detector string
 	Params   []interface{}
@@ -39,7 +39,7 @@ type Login struct {
 
 type LoginRsp struct {
 	ID      string
-	Metrics map[string]MetricConfig
+	Metrics map[int64]MetricConfig
 }
 
 type Ping struct {
@@ -48,7 +48,7 @@ type Ping struct {
 }
 
 type PingRsp struct {
-	Metrics map[string]MetricConfig
+	Metrics map[int64]MetricConfig
 }
 
 type CommonRsp struct {
@@ -62,5 +62,5 @@ const (
 
 type MetricReport struct {
 	ID      string
-	Metrics map[string]string
+	Metrics map[int64]string
 }

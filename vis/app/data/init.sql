@@ -20,6 +20,7 @@ CREATE TABLE metrics (
 	md5 VARCHAR(255)
 	);
 
+
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (1, "Load", "call", "Load", "");
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (2, "CPURate", "call", "CPURate", "");
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (3, "MemRate", "call", "MemRate", "");
@@ -29,6 +30,7 @@ INSERT INTO metrics (id, name, type, detector, md5) VALUES (6, "DiskWrite", "cal
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (7, "NetRead", "call", "NetRead", "");
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (8, "NetWrite", "call", "NetWrite", "");
 INSERT INTO metrics (id, name, type, detector, md5) VALUES (9, "SayHi", "remote", "/detector/sayhi.py", "9ea540cf1e160752e7de7c5d7a57c18cc363cf1c");
+INSERT INTO metrics (id, name, type, detector, md5) VALUES (10, "BaseMetrics", "call", "BaseMetrics", "");
 
 DROP TABLE IF EXISTS default_metrics;
 CREATE TABLE default_metrics (
@@ -46,6 +48,7 @@ INSERT INTO default_metrics (id, interval, params) VALUES (6, 600, "");
 INSERT INTO default_metrics (id, interval, params) VALUES (7, 600, "");
 INSERT INTO default_metrics (id, interval, params) VALUES (8, 600, "");
 INSERT INTO default_metrics (id, interval, params) VALUES (9, 600, "");
+INSERT INTO default_metrics (id, interval, params) VALUES (10, 600, "");
 
 DROP TABLE IF EXISTS nodes;
 CREATE TABLE nodes (
@@ -107,6 +110,22 @@ CREATE TABLE metric_records (
 	value TEXT NOT NULL,
 	ctime DATETIME
 	);
+
+DROP TABLE IF EXISTS current_metrics;
+CREATE TABLE current_metrics (
+	id INTEGER PRIMARY KEY NOT NULL,
+	node INTEGER NOT NULL,
+	metric INTEGER NOT NULL,
+	value TEXT NOT NULL,
+	ctime DATETIME,
+	UNIQUE(node, metric)
+	);
+
+DROP VIEW IF EXISTS current_metrics_view;
+CREATE VIEW current_metrics_view AS
+	SELECT c.node AS node, c.metric AS metric, b.name AS name, c.value AS value 
+	FROM current_metrics AS c, metrics AS b 
+	WHERE c.metric = b.id;
 
 DROP TABLE IF EXISTS config;
 CREATE TABLE config (

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"path"
@@ -15,8 +16,9 @@ import (
 )
 
 const (
-	SQL_SELECT_NODES_INFO  = `SELECT id, name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ? ORDER BY id;`
-	SQL_SELECT_NODE_GROUPS = `SELECT id, pid, name FROM groups ORDER by level, id;`
+	SQL_SELECT_NODES_INFO      = `SELECT id, name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ? ORDER BY id;`
+	SQL_SELECT_NODE_GROUPS     = `SELECT id, pid, name FROM groups ORDER by level, id;`
+	SQL_SELECT_CURRENT_METRICS = `SELECT metric, name, value FROM current_metrics_view WHERE node = ?;`
 )
 
 func (v *Vis) runPortal() {
@@ -157,12 +159,19 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 
 	data["CurGroup"] = pg
 
-	type Node struct {
-		Info    jarvis.NodeInfo
-		Metrics interface{}
+	type Metric struct {
+		ID     int64
+		Name   string
+		Value  string
+		Values map[string]string
 	}
 
-	nodes := make([]Node, 0)
+	type Node struct {
+		Info    jarvis.NodeInfo
+		Metrics map[int64]Metric
+	}
+
+	nodes := make(map[int64]Node)
 
 	rows, err := v.db.Query(SQL_SELECT_NODES_INFO, group)
 	check(err)
@@ -177,11 +186,35 @@ func (v *Vis) handleDashboardGroup(req *http.Request, params martini.Params, dat
 			&node.Info.CPU, &node.Info.Core, &node.Info.Mem, &node.Info.Disk, &node.Info.Uptime)
 		check(err)
 
-		nodes = append(nodes, node)
+		nodes[node.Info.ID] = node
 	}
 
 	err = rows.Err()
 	check(err)
+
+	for id, _ := range nodes {
+
+		crows, err := v.db.Query(SQL_SELECT_CURRENT_METRICS, id)
+		check(err)
+
+		defer crows.Close()
+
+		for crows.Next() {
+
+			var metric Metric
+
+			err = crows.Scan(&metric.ID, &metric.Name, &metric.Value)
+			check(err)
+
+			json.Unmarshal(metric.Value, &metric.Values)
+
+			nodes[id].Metrics[metric.ID] = metric
+		}
+
+		err = crows.Err()
+		check(err)
+
+	}
 
 	data["Nodes"] = nodes
 }

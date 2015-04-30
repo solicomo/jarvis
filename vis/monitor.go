@@ -18,7 +18,13 @@ import (
 
 const (
 	SQL_NEW_METRIC_RECORD = `INSERT INTO metric_records (node, metric, value, ctime)
-		SELECT ?, metrics.id, ?, datetime('now','localtime') FROM metrics WHERE name = ?;`
+		VALUES (?, ?, ?, datetime('now','localtime'));`
+
+	SQL_NEW_CURRENT_METRIC = `INSERT INTO current_metrics (node, metric, value, ctime)
+		VALUES (?, ?, ?, datetime('now','localtime'));`
+
+	SQL_UPDATE_CURRENT_METRIC = `UPDATE current_metrics SET value = ?, ctime = datetime('now','localtime') 
+		WHERE node = ? AND metric = ?;`
 
 	SQL_NEW_NODE = `INSERT INTO nodes (name, addr, type) VALUES (?, ?, ?);`
 
@@ -34,7 +40,7 @@ const (
 
 	SQL_SELECT_NODE_ID = `SELECT id FROM nodes WHERE addr = ?;`
 
-	SQL_SELECT_NODE_METRICS = `SELECT m.name, m.type, m.detector, b.params, m.md5 
+	SQL_SELECT_NODE_METRICS = `SELECT m.id, m.type, m.detector, b.params, m.md5 
 		FROM metrics AS m, metric_bindings AS b 
 		WHERE m.id = b.metric AND b.node = ?;`
 
@@ -139,7 +145,7 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 		var metric jarvis.MetricConfig
 		var params string
 
-		err = rows.Scan(&metric.Name, &metric.Type, &metric.Detector, &params, &metric.MD5)
+		err = rows.Scan(&metric.ID, &metric.Type, &metric.Detector, &params, &metric.MD5)
 		check(err)
 
 		if len(params) > 0 {
@@ -186,7 +192,7 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 
 		metric.Params = make([]interface{}, 0)
 
-		err = rows.Scan(&metric.Name, &metric.Type, &metric.Detector, &params, &metric.MD5)
+		err = rows.Scan(&metric.ID, &metric.Type, &metric.Detector, &params, &metric.MD5)
 		check(err)
 
 		if len(params) > 0 {
@@ -222,12 +228,24 @@ func (v *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 
 	check(err)
 
-	for name, value := range report.Metrics {
+	for id, value := range report.Metrics {
 
-		_, err = v.db.Exec(SQL_NEW_METRIC_RECORD, report.ID, value, name)
+		_, err = v.db.Exec(SQL_NEW_METRIC_RECORD, report.ID, id, value)
 
 		if err != nil {
-			log.Println("[WARN]", err, string(body[:]))
+			log.Println("[WARN]", "new metric record:", report.ID, id, value, err)
+		}
+
+		_, err = v.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
+
+		if err != nil {
+			log.Println("[WARN]", "update current metric record:", report.ID, id, value, err)
+
+			_, err = v.db.Exec(SQL_NEW_CURRENT_METRIC, report.ID, id, value)
+
+			if err != nil {
+				log.Println("[WARN]", "new current metric record:", report.ID, id, value, err)
+			}
 		}
 	}
 

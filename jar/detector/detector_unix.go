@@ -4,12 +4,12 @@ package detector
 
 import (
 	"fmt"
+	"github.com/likexian/host-stat-go"
+	"github.com/toolkits/nux"
 	"math"
 	"strings"
 	"syscall"
 	"unsafe"
-	"github.com/toolkits/nux"
-	"github.com/likexian/host-stat-go"
 )
 
 func int8ToString(bs []int8) string {
@@ -29,6 +29,41 @@ func Round(data float64, precision int) (result float64) {
 	result = result / pow
 
 	return
+}
+
+func (Detector) BaseMetrics() (result string, err error) {
+
+	bm := struct {
+		Load      string
+		CPURate   string
+		MemRate   string
+		SwapRate  string
+		DiskRate  string
+		DiskRead  string
+		DiskWrite string
+		NetRead   string
+		NetWrite  string
+	}{
+		Load(),
+		CPURate(),
+		MemRate(),
+		SwapRate(),
+		DiskRate(),
+		DiskRead(),
+		DiskWrite(),
+		NetRead(),
+		NetWrite(),
+	}
+
+	data, err := json.Marshal(bm)
+
+	if err != nil {
+		log.Println("[ERRO]", err)
+		result = err.Error()
+		return
+	}
+
+	result = string(data[:])
 }
 
 func (Detector) OSVer(params ...string) (result string, err error) {
@@ -75,9 +110,9 @@ func (Detector) Uptime() (result string, err error) {
 		result = fmt.Sprintf("%v days, %v:%v", days, hours, mins)
 	}
 
-//	if upt, err := host_stat.GetUptimeStat(); err == nil {
-//		result = fmt.Sprintf("%v", uint64(upt.Uptime))
-//	}
+	//	if upt, err := host_stat.GetUptimeStat(); err == nil {
+	//		result = fmt.Sprintf("%v", uint64(upt.Uptime))
+	//	}
 
 	return
 }

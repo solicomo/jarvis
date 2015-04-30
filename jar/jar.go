@@ -20,24 +20,24 @@ import (
 )
 
 type Config struct {
-	ID           string
-	ListenType   string
-	ListenAddr   string
-	MonitorType  string
-	MonitorAddr  string
-	MetricsMutex sync.RWMutex
-	Metrics      map[string]jarvis.MetricConfig
+	ListenType  string
+	ListenAddr  string
+	MonitorType string
+	MonitorAddr string
 }
 
 type Metric struct {
-	Name  string
+	ID    int64
 	Value string
 }
 
 type Jar struct {
-	root    string
-	appName string
-	config  Config
+	ID           string
+	root         string
+	appName      string
+	config       Config
+	Metrics      map[int64]jarvis.MetricConfig
+	MetricsMutex sync.RWMutex
 }
 
 func (j *Jar) Init(root, appName string) (err error) {
@@ -99,14 +99,14 @@ func (j *Jar) login() (err error) {
 	// Can not build on Mac
 	// var d detector.Detector
 
-	// logi.OS, _ = d.OSVer("s", "r", "m", "n")
+	// logi.OS, _ = d.OSVer("s", "r", "m")
 	// logi.CPU, _ = d.CPUName()
 	// logi.Core, _ = d.CPUCore()
 	// logi.Mem, _ = d.MemSize()
 	// logi.Disk, _ = d.DiskSize()
 	// logi.Uptime, _ = d.Uptime()
 
-	logi.OS, _ = detector.Call("OSVer", "s", "r", "m", "n")
+	logi.OS, _ = detector.Call("OSVer", "s", "r", "m")
 	logi.CPU, _ = detector.Call("CPUName")
 	logi.Core, _ = detector.Call("CPUCore")
 	logi.Mem, _ = detector.Call("MemSize")
@@ -128,10 +128,10 @@ func (j *Jar) login() (err error) {
 		return
 	}
 
-	j.config.ID = logRsp.ID
-	j.config.Metrics = logRsp.Metrics
+	j.ID = logRsp.ID
+	j.Metrics = logRsp.Metrics
 
-	log.Println("[INFO]", "login success:", logRsp.ID)
+	log.Println("[INFO]", "login success, this is ", logRsp.ID)
 	return
 }
 
@@ -143,7 +143,7 @@ func (j *Jar) ping() {
 
 		var ping jarvis.Ping
 
-		ping.ID = j.config.ID
+		ping.ID = j.ID
 		ping.Uptime, _ = detector.Call("Uptime")
 
 		resp, err := j.postTo(jarvis.URL_PING, ping)
@@ -161,9 +161,9 @@ func (j *Jar) ping() {
 			continue
 		}
 
-		j.config.MetricsMutex.Lock()
-		j.config.Metrics = pingRsp.Metrics
-		j.config.MetricsMutex.Unlock()
+		j.MetricsMutex.Lock()
+		j.Metrics = pingRsp.Metrics
+		j.MetricsMutex.Unlock()
 	}
 }
 
@@ -171,30 +171,28 @@ func (j *Jar) report() {
 
 	log.Println("[INFO]", "report")
 
-	j.config.MetricsMutex.RLock()
+	j.MetricsMutex.RLock()
 
-	metricCount := len(j.config.Metrics)
+	metricCount := len(j.Metrics)
 	metricConfigChan := make(chan jarvis.MetricConfig, metricCount)
 	metricChan := make(chan Metric, metricCount)
 
-	for name, config := range j.config.Metrics {
-
-		config.Name = name
+	for name, config := range j.Metrics {
 
 		go j.detect(metricConfigChan, metricChan)
 
 		metricConfigChan <- config
 	}
 
-	j.config.MetricsMutex.RUnlock()
+	j.MetricsMutex.RUnlock()
 
 	var report jarvis.MetricReport
-	report.ID = j.config.ID
+	report.ID = j.ID
 	report.Metrics = make(map[string]string, metricCount)
 
 	for i := 0; i < metricCount; i++ {
 		metric := <-metricChan
-		report.Metrics[metric.Name] = metric.Value
+		report.Metrics[metric.ID] = metric.Value
 	}
 
 	j.postTo(jarvis.URL_REPORT, report)
@@ -236,8 +234,9 @@ func (j *Jar) postTo(url string, data interface{}) (resp []byte, err error) {
 func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric) {
 
 	metricConf := <-configChan
+
 	var metric Metric
-	metric.Name = metricConf.Name
+	metric.ID = metricConf.ID
 
 	switch metricConf.Type {
 	case "call":

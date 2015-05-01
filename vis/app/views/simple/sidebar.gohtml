@@ -4,26 +4,22 @@
 			<h4 class="panel-title">Overviews</h4>
 		</a>
 	</div>
-	<div class="panel-group" id="sidebar-nodegroup" role="tablist" aria-multiselectable="true">
+	<div class="panel-group" id="sidebar-nodegroup">
 		{{$curGroup := .CurGroup}}
 		{{range .Groups}}
 		{{if or (ne .ID 1) (len .Subs)}}
 		<div class="panel panel-primary">
-			<a class="panel-heading" role="tab" id="sbng-heading{{.ID}}" data-toggle="collapse" data-parent="#sidebar-nodegroup" href="#sbng-collapse{{.ID}}" aria-expanded="true" aria-controls="sbng-collapse{{.ID}}">
+			<a class="panel-heading" data-toggle="collapse"  href="#sbng-collapse{{.ID}}" aria-expanded="true" aria-controls="sbng-collapse{{.ID}}">
 				<h4 class="panel-title">{{.Name}}</h4>
 			</a>
-			<div id="sbng-collapse{{.ID}}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="sbng-heading{{.ID}}">
-				<div class="panel-body">
-					<ul class="nav nav-sidebar">
-						{{range .Subs}}
-						{{if eq .ID $curGroup}}
-						<li class="active"><a class="btn-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
-						{{else}}
-						<li><a class="btn-default" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a></li>
-						{{end}}
-						{{end}}
-					</ul>
-				</div>
+			<div id="sbng-collapse{{.ID}}" class="panel-body list-group collapse in">
+				{{range .Subs}}
+				{{if eq .ID $curGroup}}
+				<a class="list-group-item list-group-item-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a>
+				{{else}}
+				<a class="list-group-item" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a>
+				{{end}}
+				{{end}}
 			</div>
 		</div>
 		{{end}}

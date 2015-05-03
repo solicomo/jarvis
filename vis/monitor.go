@@ -87,76 +87,10 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &login)
 	check(err)
 
-	switch {
-	case strings.HasPrefix(login.Addr, "127.0.0.1"):
-		fallthrough
-	case strings.HasPrefix(login.Addr, "0.0.0.0"):
-		fallthrough
-	case strings.HasPrefix(login.Addr, "localhost"):
-		_, op, e := net.SplitHostPort(login.Addr)
-
-		if e == nil {
-			h, _, e := net.SplitHostPort(r.RemoteAddr)
-
-			if e == nil {
-				login.Addr = h + ":" + op
-			}
-		}
-	}
-
-	var nodeID int64
-
-	err = v.db.QueryRow(SQL_SELECT_NODE_ID, login.Addr).Scan(&nodeID)
-
-	if err == sql.ErrNoRows {
-
-		result, e := v.db.Exec(SQL_NEW_NODE, login.Addr, login.Addr, login.Type)
-		check(e)
-
-		nodeID, err = result.LastInsertId()
-		check(err)
-
-		_, err = v.db.Exec(SQL_NEW_DEFAULT_METRICS, nodeID)
-
-		if err != nil {
-			log.Println("[WARN]", err)
-		}
-
-	} else {
-		check(err)
-	}
-
-	_, err = v.db.Exec(SQL_UPDATE_NODE, login.Type, login.OS, login.CPU,
-		login.Core, login.Mem, login.Disk, login.Uptime, nodeID)
-	check(err)
-
-	rows, err := v.db.Query(SQL_SELECT_NODE_METRICS, nodeID)
-	check(err)
-
-	defer rows.Close()
-
 	var loginRsp jarvis.LoginRsp
 
-	loginRsp.ID = nodeID
-	loginRsp.Metrics = make(map[string]jarvis.MetricConfig)
-
-	for rows.Next() {
-
-		var metric jarvis.MetricConfig
-		var params string
-
-		err = rows.Scan(&metric.ID, &metric.Type, &metric.Detector, &params, &metric.MD5)
-		check(err)
-
-		if len(params) > 0 {
-			err = json.Unmarshal([]byte(params), &metric.Params)
-			check(err)
-		}
-
-		loginRsp.Metrics[strconv.FormatInt(metric.ID, 10)] = metric
-	}
-
-	check(rows.Err())
+	loginRsp.ID = getNodeID(login.Type, login.Addr, r.RemoteAddr)
+	loginRsp.Metrics = getMetrics(loginRsp.ID)
 
 	respData, err := json.Marshal(loginRsp)
 	check(err)
@@ -164,6 +98,11 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write(respData); err != nil {
 		log.Println("[ERRO]", "Write response failed.")
 	}
+
+	_, err = v.db.Exec(SQL_UPDATE_NODE, login.Type, login.OS, login.CPU,
+		login.Core, login.Mem, login.Disk, login.Uptime, nodeID)
+	check(err)
+
 }
 
 func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
@@ -173,38 +112,13 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 
 	var ping jarvis.Ping
 
-	log.Println("[DEBU]", string(body[:]))
 	err = json.Unmarshal(body, &ping)
 	check(err)
 
-	rows, err := v.db.Query(SQL_SELECT_NODE_METRICS, ping.ID)
-	check(err)
-
-	defer rows.Close()
-
 	var pingRsp jarvis.PingRsp
 
-	pingRsp.Metrics = make(map[string]jarvis.MetricConfig)
-
-	for rows.Next() {
-
-		var metric jarvis.MetricConfig
-		var params string
-
-		metric.Params = make([]interface{}, 0)
-
-		err = rows.Scan(&metric.ID, &metric.Type, &metric.Detector, &params, &metric.MD5)
-		check(err)
-
-		if len(params) > 0 {
-			err = json.Unmarshal([]byte(params), &metric.Params)
-			check(err)
-		}
-
-		pingRsp.Metrics[strconv.FormatInt(metric.ID, 10)] = metric
-	}
-
-	check(rows.Err())
+	pingRsp.ID = getNodeID(ping.Type, ping.Addr, r.RemoteAddr)
+	pingRsp.Metrics = getMetrics(pingRsp.ID)
 
 	respData, err := json.Marshal(pingRsp)
 	check(err)
@@ -217,7 +131,79 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 	check(err)
 }
 
-func (v *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
+func (self *Vis) getNodeID(typ addr, remote string) (node int64) {
+
+	// node id
+	switch {
+	case strings.HasPrefix(addr, "127.0.0.1"):
+		fallthrough
+	case strings.HasPrefix(addr, "0.0.0.0"):
+		fallthrough
+	case strings.HasPrefix(addr, "localhost"):
+		_, op, e := net.SplitHostPort(addr)
+
+		if e == nil {
+			h, _, e := net.SplitHostPort(remote)
+
+			if e == nil {
+				addr = h + ":" + op
+			}
+		}
+	}
+
+	err = self.db.QueryRow(SQL_SELECT_NODE_ID, addr).Scan(&node)
+
+	if err == sql.ErrNoRows {
+
+		result, e := self.db.Exec(SQL_NEW_NODE, addr, addr, typ)
+		check(e)
+
+		node, err = result.LastInsertId()
+		check(err)
+
+		_, err = self.db.Exec(SQL_NEW_DEFAULT_METRICS, node)
+
+		if err != nil {
+			log.Println("[WARN]", err)
+		}
+
+	} else {
+		check(err)
+	}
+
+	return
+}
+
+func (self *Vis) getMetrics(node int64) (metrics map[string]jarvis.MetricConfig) {
+
+	// metrics
+	rows, err := self.db.Query(SQL_SELECT_NODE_METRICS, node)
+	check(err)
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		var metric jarvis.MetricConfig
+		var params string
+
+		err = rows.Scan(&metric.ID, &metric.Type, &metric.Detector, &params, &metric.MD5)
+		check(err)
+
+		if len(params) > 0 {
+			err = json.Unmarshal([]byte(params), &metric.Params)
+			check(err)
+		}
+
+		metrics[strconv.FormatInt(metric.ID, 10)] = metric
+	}
+
+	check(rows.Err())
+
+	return
+}
+
+func (self *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 

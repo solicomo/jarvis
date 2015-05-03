@@ -2,10 +2,10 @@
 {{template "header"}}
 
 
-{{template "sidebar" .}}
+{{template "dashboard/sidebar" .}}
 
 {{if eq .Status "200"}}
-	{{template "main" .}}
+	{{template "dashboard/main" .}}
 {{else}}
 	{{template "500" .ErrMsg}}
 {{end}}

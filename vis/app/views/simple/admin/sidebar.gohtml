@@ -1,0 +1,30 @@
+<div class="col-sm-3 col-md-2 sidebar">
+	<div class="panel panel-primary">
+		<a class="panel-heading" href="/dashboard">
+			<h4 class="panel-title">Overviews</h4>
+		</a>
+	</div>
+	<div class="panel-group" id="sidebar-admin">
+		<div class="panel panel-primary">
+			<a class="panel-heading" data-toggle="collapse"  href="#nodes-collapse" aria-expanded="true" aria-controls="nodes-collapse">
+				<h4 class="panel-title">Nodes</h4>
+			</a>
+			<div id="nodes-collapse" class="panel-body list-group collapse in">
+				{{$curGroup := .CurGroup}}
+				{{range .Groups}}
+				<a class="list-group-item{{if eq .ID $curGroup}} list-group-item-info{{end}}" href="/admin/group/{{.ID}}/{{.Name}}">{{.Name}}</a>
+				{{end}}
+			</div>
+		</div>
+		<div class="panel panel-primary">
+			<a class="panel-heading" data-toggle="collapse"  href="#metrics-collapse" aria-expanded="true" aria-controls="metrics-collapse">
+				<h4 class="panel-title">Metrics</h4>
+			</a>
+			<div id="metrics-collapse" class="panel-body list-group collapse in">
+				<a class="list-group-item {{if eq .CurMenu "metrics-edit"}}list-group-item-info{{end}}" href="/admin/metrics/edit">Edit Metrics</a>
+				<a class="list-group-item {{if eq .CurMenu "metrics-default"}}list-group-item-info{{end}}" href="/admin/metrics/default">Default Metrics</a>
+			</div>
+		</div>
+	</div>
+</div>
+

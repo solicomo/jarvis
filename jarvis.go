@@ -21,8 +21,8 @@ type MetricConfig struct {
 }
 
 type NodeInfo struct {
-	ID     int64
-	Name   string
+	ID     int64  // not used for Login
+	Name   string // not used for Login
 	Type   string
 	Addr   string
 	OS     string
@@ -44,11 +44,13 @@ type LoginRsp struct {
 
 type Ping struct {
 	ID     int64
+	Type   string
+	Addr   string
 	Uptime string
 }
 
 type PingRsp struct {
-	Metrics map[string]MetricConfig
+	LoginRsp
 }
 
 type CommonRsp struct {
@@ -61,6 +63,6 @@ const (
 )
 
 type MetricReport struct {
-	ID      int64 
+	ID      int64
 	Metrics map[string]string
 }

@@ -2,12 +2,14 @@
 {{template "header"}}
 
 
-{{template "sidebar_profile"}}
+{{template "admin/sidebar" .}}
 
-{{if eq .Status "200"}}
-	{{template "main_profile" .}}
-{{else}}
+{{if ne .Status "200"}}
 	{{template "500" .ErrMsg}}
+{{else if eq .CurMenu "nodes-edit"}}
+	{{template "admin/nodes" .}}
+{{else}}
+	{{template "admin/metrics" .}}
 {{end}}
 
 

@@ -1,0 +1,101 @@
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+	<h1 class="page-header">Nodes</h1>
+	<div>
+		<table id="group-list" role="tablist" class="group-list panel-group table table-hover">
+			<thead>
+				<tr>
+					<th>Group ID</th>
+					<th>Group</th>
+					<th>Node ID</th>
+					<th>Node</th>
+					<th>Addr</th>
+					<th>Atime</th>
+					<th>Edit</th>
+				</tr>
+			</thead>
+			{{range .Groups}}
+			<tbody class="group-info panel">
+				<tr class="active" data-toggle="collapse" href="#group-{{.ID}}" aria-expanded="true" aria-controls="group-{{.ID}}">
+					<td>{{.ID}}</td>
+					<td colspan="5" class="input-group">
+						<input type="text" class="label groupname-i" data-groupid="{{.ID}}" value="{{.Name}}" />
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default groupname-s" data-loading-text="...">Save</button>
+							<button type="button" class="btn btn-default groupname-c" data-groupname="{{.Name}}">Cancel</button>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+			<tbody class="group-nodes collapse in" id="group-{{.ID}}">
+			{{end}}
+
+				{{range .Nodes}}
+				<tr>
+					<td class="borderless" style="border: none;"></td>
+					<td>{{.ID}}
+					<td class="node-name">
+						{{.Name}}
+					</td>
+					<td>
+						{{.Addr}}
+					</td>
+					<td>
+						{{.Atime}}
+					</td>
+					<td>
+						<button type="button" class="btn btn-primary node-edit-btn" data-toggle="modal" data-target="#nodeEditModal" data-nodeid="{{.ID}}" data-nodename="{{.Name}}">Edit</button>
+					</td>
+				</tr>
+				{{end}}
+				
+			</tbody>
+			{{end}}
+		</table>
+	</div>
+	<div class="modal fade" id="nodeEditModal" tabindex="-1" role="dialog" aria-labelledby="nodeEditModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+	<div class="modal-content">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<h4 class="modal-title" id="nodeEditModalLabel">Edit Node</h4>
+	</div>
+	<div class="modal-body">
+		<form class="form-horizontal">
+			<div class="form-group">
+				<label class="sr-only">ID</label>
+				<p class="form-control-static" id="nodeEditID">1</p>
+			</div>
+			<div class="form-group">
+				<label for="node-name" class="control-label">Name</label>
+				<input type="text" class="form-control" id="node-name">
+			</div>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		<button type="button" class="btn btn-primary">Save</button>
+	</div>
+	</div>
+	</div>
+	</div>
+	
+	<script type="text/javascript">
+		$('.groupname-s').on('click', function () {
+			var input = $(this).closest("input.groupname-i")
+		})
+
+		$('.groupname-c').on('click', function () {
+			var oname = $(this).data("groupname")
+			var input = $(this).closest("input.groupname-i")
+			input.val(oname)
+		})
+
+		$('.node-edit-btn').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget)
+			var nodeid = button.data('nodeid')
+			var nodename = button.data('nodename')
+			var modal = $(this)
+			modal.find('.modal-title').text('Edit Node ' + nodename)
+		})
+	</script>
+</div>

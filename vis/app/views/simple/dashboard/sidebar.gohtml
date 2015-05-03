@@ -14,11 +14,7 @@
 			</a>
 			<div id="sbng-collapse{{.ID}}" class="panel-body list-group collapse in">
 				{{range .Subs}}
-				{{if eq .ID $curGroup}}
-				<a class="list-group-item list-group-item-info" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a>
-				{{else}}
-				<a class="list-group-item" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a>
-				{{end}}
+				<a class="list-group-item{{if eq .ID $curGroup}} list-group-item-info{{end}}" href="/dashboard/{{.ID}}/{{.Name}}">{{.Name}}</a>
 				{{end}}
 			</div>
 		</div>

@@ -1,0 +1,38 @@
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+	<h1 class="page-header">Nodes</h1>
+	<div>
+		<table id="metric-list" role="tablist" class="table table-striped table-hover metric-list">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Detector</th>
+					<th>MD5</th>
+					<th>Default</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{range .Metrics}}
+				<tr>
+					<td>{{.ID}}</td>
+					<td>{{.Name}}</td>
+					<td>{{.Type}}</td>
+					<td>{{.Detector}}</td>
+					<td>{{.MD5}}</td>
+					<td><input type="checkbox" class="metric-cb" data-metricid="{{.ID}}"></td>
+				</tr>
+				{{end}}
+			</tbody>
+		</table>
+	</div>
+	<script type="text/javascript">
+		$('.metric-cb').on('click', function () {
+			$(this).prop('disabled', true);
+			
+			//
+
+			$(this).prop('disabled', false);
+		})
+	</script>
+</div>

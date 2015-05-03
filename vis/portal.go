@@ -21,9 +21,9 @@ const (
 	SQL_SELECT_CURRENT_METRICS = `SELECT metric, name, value FROM current_metrics_view WHERE node = ?;`
 )
 
-func (v *Vis) runPortal() {
+func (self *Vis) runPortal() {
 
-	err := v.loadNodeGroups()
+	err := self.loadNodeGroups()
 
 	if err != nil {
 		log.Println("[ERRO]", "load node groups failed:", err)
@@ -32,23 +32,28 @@ func (v *Vis) runPortal() {
 	m := martini.Classic()
 
 	m.Use(render.Renderer(render.Options{
-		Directory:  path.Join(v.root, "app/views/simple"),
+		Directory:  path.Join(self.root, "app/views/simple"),
 		Extensions: []string{".gohtml", ".tmpl", ".html"},
 	}))
 
-	m.Get("/dashboard/:group/:gname", martiniSafeHandler("dashboard", v.handleDashboardGroup))
+	m.Get("/dashboard/:group/:gname", martiniSafeHandler("dashboard/layout", self.handleDashboardGroup))
+	m.Get("/dashboard/**", martiniSafeHandler("dashboard/layout", self.handleDashboardOverviews))
 
-	m.Get("/dashboard/overviews", martiniSafeHandler("dashboard", v.handleDashboardOverviews))
+	m.Get("/admin/group/:group/:gname", martiniSafeHandler("admin/nodes", self.handleAdminNodes))
+	m.Get("/admin/metrics/default", martiniSafeHandler("admin/metrics", self.handleAdminMetricsDefault))
+	m.Get("/admin/metrics/**", martiniSafeHandler("admin/metrics", self.handleAdminMetrics))
+	m.Get("/admin/**", martiniSafeHandler("admin/nodes", self.handleAdminNodes))
+
 	m.Get("/**", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard/overviews", http.StatusTemporaryRedirect)
 	})
 
-	m.RunOnAddr(v.config.PortalAddr)
+	m.RunOnAddr(self.config.PortalAddr)
 }
 
-func (v *Vis) loadNodeGroups() (err error) {
+func (self *Vis) loadNodeGroups() (err error) {
 
-	rows, err := v.db.Query(SQL_SELECT_NODE_GROUPS)
+	rows, err := self.db.Query(SQL_SELECT_NODE_GROUPS)
 
 	if err != nil {
 		return
@@ -56,10 +61,10 @@ func (v *Vis) loadNodeGroups() (err error) {
 
 	defer rows.Close()
 
-	v.nodeGroupsMutex.Lock()
-	defer v.nodeGroupsMutex.Unlock()
+	self.nodeGroupsMutex.Lock()
+	defer self.nodeGroupsMutex.Unlock()
 
-	v.nodeGroups = make(map[int64]NodeGroup)
+	self.nodeGroups = make(map[int64]NodeGroup)
 
 	for rows.Next() {
 
@@ -73,10 +78,10 @@ func (v *Vis) loadNodeGroups() (err error) {
 		// 当前只支持 2 级
 		if group.PID == 0 {
 			group.Subs = make(map[int64]NodeGroup)
-			v.nodeGroups[group.ID] = group
+			self.nodeGroups[group.ID] = group
 		} else {
 
-			g, ok := v.nodeGroups[group.PID]
+			g, ok := self.nodeGroups[group.PID]
 			if ok {
 				g.Subs[group.ID] = group
 			}
@@ -86,26 +91,24 @@ func (v *Vis) loadNodeGroups() (err error) {
 	err = rows.Err()
 
 	//
-	ungroup, ok := v.nodeGroups[1]
+	ungroup, ok := self.nodeGroups[1]
 	if ok {
 		if len(ungroup.Subs) == 0 {
-			delete(v.nodeGroups, 1)
+			delete(self.nodeGroups, 1)
 		}
 	}
 
 	return
 }
 
-func (v *Vis) handleDashboardOverviews(req *http.Request, params martini.Params, data map[string]interface{}) {
+func (self *Vis) handleDashboardOverviews(req *http.Request, params martini.Params, data map[string]interface{}) {
 
-	v.nodeGroupsMutex.RLock()
-	defer v.nodeGroupsMutex.RUnlock()
+	self.nodeGroupsMutex.RLock()
+	defer self.nodeGroupsMutex.RUnlock()
 
 	data["Status"] = "200"
-	data["Title"] = "Dashboard"
-	data["Groups"] = v.nodeGroups
-	data["CurSubGroup"] = 0
-	data["CurGroup"] = 0
+	data["Title"] = "Overviews | Dashboard"
+	data["Groups"] = self.nodeGroups
 
 	type Overview struct {
 		Name        string

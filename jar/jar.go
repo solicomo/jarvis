@@ -272,7 +272,7 @@ func (j *Jar) detect(configChan chan jarvis.MetricConfig, metricChan chan Metric
 				h = fmt.Sprintf("%x", sum)
 			}
 
-			if h != metricConf.MD5 {
+			if err != nil || (metricConf.MD5 != "*" && h != metricConf.MD5) {
 				r, err := http.Get(metricConf.Detector)
 
 				if err != nil {

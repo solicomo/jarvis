@@ -4,10 +4,12 @@
 
 {{template "dashboard/sidebar" .}}
 
-{{if eq .Status "200"}}
-	{{template "dashboard/main" .}}
-{{else}}
+{{if ne .Status "200"}}
 	{{template "500" .ErrMsg}}
+{{else if .Overviews}}
+	{{template "dashboard/overviews" .}}
+{{else}}
+	{{template "dashboard/nodes" .}}
 {{end}}
 
 

@@ -19,7 +19,7 @@
 					<td>{{.ID}}</td>
 					<td colspan="5" class="input-group">
 						<input type="text" class="label groupname-i" data-groupid="{{.ID}}" value="{{.Name}}" />
-						<div class="input-group-btn">
+						<div class="input-group-btn hidden">
 							<button type="button" class="btn btn-default groupname-s" data-loading-text="...">Save</button>
 							<button type="button" class="btn btn-default groupname-c" data-groupname="{{.Name}}">Cancel</button>
 						</div>
@@ -32,7 +32,7 @@
 				{{range .Nodes}}
 				<tr>
 					<td class="borderless" style="border: none;"></td>
-					<td>{{.ID}}
+					<td>{{.ID}}</td>
 					<td class="node-name">
 						{{.Name}}
 					</td>
@@ -49,7 +49,6 @@
 				{{end}}
 				
 			</tbody>
-			{{end}}
 		</table>
 	</div>
 	<div class="modal fade" id="nodeEditModal" tabindex="-1" role="dialog" aria-labelledby="nodeEditModalLabel" aria-hidden="true">

@@ -73,11 +73,11 @@ func (v *Vis) runMonitor() {
 
 //=-=-=-=-=-=-=-=-=-=-=-=
 
-func (v *Vis) handleIndex(w http.ResponseWriter, r *http.Request) {
+func (self *Vis) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
+func (self *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	check(err)
@@ -89,8 +89,8 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	var loginRsp jarvis.LoginRsp
 
-	loginRsp.ID = getNodeID(login.Type, login.Addr, r.RemoteAddr)
-	loginRsp.Metrics = getMetrics(loginRsp.ID)
+	loginRsp.ID = self.getNodeID(login.Type, login.Addr, r.RemoteAddr)
+	loginRsp.Metrics = self.getMetrics(loginRsp.ID)
 
 	respData, err := json.Marshal(loginRsp)
 	check(err)
@@ -99,13 +99,13 @@ func (v *Vis) handleLogin(w http.ResponseWriter, r *http.Request) {
 		log.Println("[ERRO]", "Write response failed.")
 	}
 
-	_, err = v.db.Exec(SQL_UPDATE_NODE, login.Type, login.OS, login.CPU,
-		login.Core, login.Mem, login.Disk, login.Uptime, nodeID)
+	_, err = self.db.Exec(SQL_UPDATE_NODE, login.Type, login.OS, login.CPU,
+		login.Core, login.Mem, login.Disk, login.Uptime, loginRsp.ID)
 	check(err)
 
 }
 
-func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
+func (self *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	check(err)
@@ -117,8 +117,8 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 
 	var pingRsp jarvis.PingRsp
 
-	pingRsp.ID = getNodeID(ping.Type, ping.Addr, r.RemoteAddr)
-	pingRsp.Metrics = getMetrics(pingRsp.ID)
+	pingRsp.ID = self.getNodeID(ping.Type, ping.Addr, r.RemoteAddr)
+	pingRsp.Metrics = self.getMetrics(pingRsp.ID)
 
 	respData, err := json.Marshal(pingRsp)
 	check(err)
@@ -127,11 +127,11 @@ func (v *Vis) handlePing(w http.ResponseWriter, r *http.Request) {
 		log.Println("[ERRO]", "Write response failed.")
 	}
 
-	_, err = v.db.Exec(SQL_UPDATE_NODE_UPTIME, ping.Uptime, ping.ID)
+	_, err = self.db.Exec(SQL_UPDATE_NODE_UPTIME, ping.Uptime, ping.ID)
 	check(err)
 }
 
-func (self *Vis) getNodeID(typ addr, remote string) (node int64) {
+func (self *Vis) getNodeID(typ, addr, remote string) (node int64) {
 
 	// node id
 	switch {
@@ -151,7 +151,7 @@ func (self *Vis) getNodeID(typ addr, remote string) (node int64) {
 		}
 	}
 
-	err = self.db.QueryRow(SQL_SELECT_NODE_ID, addr).Scan(&node)
+	err := self.db.QueryRow(SQL_SELECT_NODE_ID, addr).Scan(&node)
 
 	if err == sql.ErrNoRows {
 
@@ -217,13 +217,13 @@ func (self *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 
 	for id, value := range report.Metrics {
 
-		_, err = v.db.Exec(SQL_NEW_METRIC_RECORD, report.ID, id, value)
+		_, err = self.db.Exec(SQL_NEW_METRIC_RECORD, report.ID, id, value)
 
 		if err != nil {
 			log.Println("[WARN]", "new metric record:", report.ID, id, value, err)
 		}
 
-		r, err := v.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
+		r, err := self.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
 
 		up := true
 
@@ -240,7 +240,7 @@ func (self *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 		if !up {
 			log.Println("[WARN]", "update current metric record:", report.ID, id, value, err)
 
-			_, err = v.db.Exec(SQL_NEW_CURRENT_METRIC, report.ID, id, value)
+			_, err = self.db.Exec(SQL_NEW_CURRENT_METRIC, report.ID, id, value)
 
 			if err != nil {
 				log.Println("[WARN]", "new current metric record:", report.ID, id, value, err)

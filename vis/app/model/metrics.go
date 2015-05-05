@@ -1,13 +1,13 @@
 package model
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"errors"
+	"strconv"
 )
 
 var metrics Metrics
 
-func GetMetrics() (metrics *Metrics) {
+func GetMetrics() *Metrics {
 	return &metrics
 }
 

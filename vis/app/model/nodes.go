@@ -38,3 +38,11 @@ type Groups struct {
 
 type Nodes struct {
 }
+
+func (self *Nodes) All() {
+
+}
+
+func (self *Groups) All() {
+
+}

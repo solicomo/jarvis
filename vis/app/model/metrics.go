@@ -41,6 +41,10 @@ type DefaultMetric struct {
 type Metrics struct {
 }
 
+func (self *Metric) Save() {
+
+}
+
 func (self *Metrics) All() (metrics map[int64]Metric, err error) {
 
 	metrics = make(map[int64]Metric)
@@ -101,7 +105,7 @@ func (self *Metrics) AllDefault() (dfts map[int64]DefaultMetric, err error) {
 	return
 }
 
-func (self *Metrics) AddMetric(name, t, detector, md5 string) (metric Metric, err error) {
+func (self *Metrics) Add(name, t, detector, md5 string) (metric Metric, err error) {
 
 	metric = Metric{Name: name, Type: t, Detector: detector, MD5: md5}
 
@@ -115,7 +119,7 @@ func (self *Metrics) AddMetric(name, t, detector, md5 string) (metric Metric, er
 	return
 }
 
-func (self *Metrics) RenameMetric(id int64, name string) (err error) {
+func (self *Metrics) Rename(id int64, name string) (err error) {
 
 	result, err := db.Exec(SQL_UPDATE_METRIC_NAME, name, id)
 
@@ -136,7 +140,7 @@ func (self *Metrics) RenameMetric(id int64, name string) (err error) {
 	return
 }
 
-func (self *Metrics) UpdateMetric(id int64, t, detector, md5 string) (err error) {
+func (self *Metrics) Update(id int64, t, detector, md5 string) (err error) {
 
 	result, err := db.Exec(SQL_UPDATE_METRIC, t, detector, md5, id)
 
@@ -157,7 +161,7 @@ func (self *Metrics) UpdateMetric(id int64, t, detector, md5 string) (err error)
 	return
 }
 
-func (self *Metrics) DelMetric(id int64) (err error) {
+func (self *Metrics) Del(id int64) (err error) {
 
 	result, err := db.Exec(SQL_DELETE_METRIC, id)
 
@@ -178,7 +182,7 @@ func (self *Metrics) DelMetric(id int64) (err error) {
 	return
 }
 
-func (self *Metrics) GetMetric(id int64) (metric Metric, err error) {
+func (self *Metrics) Get(id int64) (metric Metric, err error) {
 
 	err = db.QueryRow(SQL_SELECT_METRIC_BY_ID, id).Scan(&metric.ID, &metric.Name,
 		&metric.Type, &metric.Detector, &metric.MD5)

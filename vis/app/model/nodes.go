@@ -39,7 +39,39 @@ type Groups struct {
 type Nodes struct {
 }
 
-func (self *Nodes) All() {
+func (self *Node) Save() {
+
+}
+
+func (self *Nodes) All() (nodes map[int64]Node, err error) {
+
+}
+
+func (self *Nodes) AllInGroup(gid int64) (nodes map[int64]Node, err error) {
+
+}
+
+func (self *Nodes) Add(gid int64, name, t, addr string) (node Node, err error) {
+
+}
+
+func (self *Nodes) Rename(id int64, name string) (err error) {
+
+}
+
+func (self *Nodes) ChGroup(id, gid int64) (err error) {
+
+}
+
+func (self *Nodes) Update(id int64, os, cpu, core, mem, disk, uptime string) (err error) {
+
+}
+
+func (self *Nodes) Del(id int64) (err error) {
+
+}
+
+func (self *Nodes) Get(id int64) (node Node, err error) {
 
 }
 

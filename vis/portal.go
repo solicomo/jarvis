@@ -13,13 +13,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"jarvis"
+	"jarvis/vis/app/model"
 )
 
 const (
-	SQL_SELECT_NODES_INFO      = `SELECT id, name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ? ORDER BY id;`
-	SQL_SELECT_NODE_GROUPS     = `SELECT id, pid, name FROM groups ORDER by level, id;`
-	SQL_SELECT_GROUPS_IN       = `SELECT id, pid, name FROM groups ORDER by level, id WHERE pid = ?;`
-	SQL_SELECT_CURRENT_METRICS = `SELECT metric, name, value FROM current_metrics_view WHERE node = ?;`
+	SQL_SELECT_NODES_INFO  = `SELECT id, name, type, addr, os, cpu, core, mem, disk, uptime FROM nodes WHERE gid = ? ORDER BY id;`
+	SQL_SELECT_NODE_GROUPS = `SELECT id, pid, name FROM groups ORDER by level, id;`
+	SQL_SELECT_GROUPS_IN   = `SELECT id, pid, name FROM groups ORDER by level, id WHERE pid = ?;`
 )
 
 func (self *Vis) runPortal() {
@@ -33,7 +33,7 @@ func (self *Vis) runPortal() {
 	m := martini.Classic()
 
 	m.Use(render.Renderer(render.Options{
-		Directory:  path.Join(self.root, "app/views/simple"),
+		Directory:  path.Join(self.root, "app/view/simple"),
 		Extensions: []string{".gohtml", ".tmpl", ".html"},
 	}))
 
@@ -262,30 +262,24 @@ func (v *Vis) loadNodesInGroup(group int64) interface{} {
 	err = rows.Err()
 	check(err)
 
+	metricsRecords := model.GetMetricsRecords()
+
 	for id, node := range nodes {
 
-		crows, err := v.db.Query(SQL_SELECT_CURRENT_METRICS, id)
+		records, err := metricsRecords.CurrentFor(id)
 		check(err)
 
 		node.Metrics = make(map[int64]Metric)
 
-		defer crows.Close()
+		for mid, m := range records {
 
-		for crows.Next() {
-
-			var metric Metric
-
-			err = crows.Scan(&metric.ID, &metric.Name, &metric.Value)
-			check(err)
+			metric := Metric{ID: mid, Name: m.Name, Value: m.Value}
 
 			metric.Values = make(map[string]string)
 			json.Unmarshal([]byte(metric.Value), &metric.Values)
 
 			node.Metrics[metric.ID] = metric
 		}
-
-		err = crows.Err()
-		check(err)
 
 		nodes[id] = node
 	}

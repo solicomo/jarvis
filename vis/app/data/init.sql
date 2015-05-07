@@ -124,7 +124,7 @@ CREATE TABLE current_metrics (
 
 DROP VIEW IF EXISTS current_metrics_view;
 CREATE VIEW current_metrics_view AS
-	SELECT c.node AS node, c.metric AS metric, b.name AS name, c.value AS value 
+	SELECT c.node AS node, c.metric AS metric, b.name AS name, c.value AS value, c.ctime AS ctime 
 	FROM current_metrics AS c, metrics AS b 
 	WHERE c.metric = b.id;
 

@@ -17,15 +17,6 @@ import (
 )
 
 const (
-	SQL_NEW_METRIC_RECORD = `INSERT INTO metric_records (node, metric, value, ctime)
-		VALUES (?, ?, ?, datetime('now','localtime'));`
-
-	SQL_NEW_CURRENT_METRIC = `INSERT INTO current_metrics (node, metric, value, ctime)
-		VALUES (?, ?, ?, datetime('now','localtime'));`
-
-	SQL_UPDATE_CURRENT_METRIC = `UPDATE current_metrics SET value = ?, ctime = datetime('now','localtime') 
-		WHERE node = ? AND metric = ?;`
-
 	SQL_NEW_NODE = `INSERT INTO nodes (name, addr, type) VALUES (?, ?, ?);`
 
 	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, params, atime, ctime) 
@@ -47,9 +38,6 @@ const (
 	// SQL_SELECT_NEW_METRICS = `SELECT name, type, detector, params, md5 FROM metrics
 	// 	WHERE id IN (SELECT metric FROM metric_bindings AS b, nodes AS n
 	// 		WHERE b.atime > n.atime AND b.node = n.id AND n.id = ?);`
-
-	SQL_CLEAR_HISTORY = `DELETE FROM metric_records WHERE 
-		julianday(datetime('now','localtime')) - julianday(ctime) > 30;`
 )
 
 func (v *Vis) runMonitor() {
@@ -215,36 +203,21 @@ func (self *Vis) handleReport(w http.ResponseWriter, r *http.Request) {
 
 	check(err)
 
-	for id, value := range report.Metrics {
+	metricsRecords := model.GetMetricsRecords()
 
-		_, err = self.db.Exec(SQL_NEW_METRIC_RECORD, report.ID, id, value)
+	for metric, value := range report.Metrics {
+
+		mid, err := strconv.ParseInt(metric, 10, 0)
+
+		if err != nil {
+			log.Println("[WARN]", "report invalid metric id", metric, "from node", report.ID)
+			continue
+		}
+
+		err = metricsRecords.Add(report.ID, mid, value)
 
 		if err != nil {
 			log.Println("[WARN]", "new metric record:", report.ID, id, value, err)
-		}
-
-		r, err := self.db.Exec(SQL_UPDATE_CURRENT_METRIC, value, report.ID, id)
-
-		up := true
-
-		if err != nil {
-			up = false
-		} else {
-			c, e := r.RowsAffected()
-			if e != nil || c < 1 {
-				up = false
-				err = e
-			}
-		}
-
-		if !up {
-			log.Println("[WARN]", "update current metric record:", report.ID, id, value, err)
-
-			_, err = self.db.Exec(SQL_NEW_CURRENT_METRIC, report.ID, id, value)
-
-			if err != nil {
-				log.Println("[WARN]", "new current metric record:", report.ID, id, value, err)
-			}
 		}
 	}
 

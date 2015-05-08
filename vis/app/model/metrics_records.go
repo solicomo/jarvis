@@ -16,12 +16,6 @@ const (
 		WHERE node = ? AND metric = ?;`
 )
 
-var metrics_records MetricsRecords
-
-func GetMetricsRecords() *MetricsRecords {
-	return &metrics_records
-}
-
 type MetricRecord struct {
 	Node   int64
 	Metric int64
@@ -31,6 +25,12 @@ type MetricRecord struct {
 }
 
 type MetricsRecords struct {
+}
+
+var metrics_records MetricsRecords
+
+func GetMetricsRecords() *MetricsRecords {
+	return &metrics_records
 }
 
 func (self *MetricsRecords) ClearBefore(days int) (err error) {

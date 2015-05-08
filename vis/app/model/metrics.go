@@ -5,12 +5,6 @@ import (
 	"strconv"
 )
 
-var metrics Metrics
-
-func GetMetrics() *Metrics {
-	return &metrics
-}
-
 const (
 	SQL_SELECT_METRICS      = `SELECT id, name, type, detector, md5 FROM metrics;`
 	SQL_SELECT_METRIC_BY_ID = `SELECT id, name, type, detector, md5 FROM metrics WHERE id = ?;`
@@ -39,6 +33,12 @@ type DefaultMetric struct {
 }
 
 type Metrics struct {
+}
+
+var metrics Metrics
+
+func GetMetrics() *Metrics {
+	return &metrics
 }
 
 func (self *Metric) Save() {

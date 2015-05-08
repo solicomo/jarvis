@@ -17,19 +17,11 @@ import (
 )
 
 const (
-	SQL_NEW_NODE = `INSERT INTO nodes (name, addr, type) VALUES (?, ?, ?);`
-
-	SQL_NEW_DEFAULT_METRICS = `INSERT INTO metric_bindings (node, metric, interval, params, atime, ctime) 
-		SELECT ?, id, interval, params, datetime('now','localtime'), datetime('now','localtime') 
-		FROM default_metrics;`
-
 	SQL_UPDATE_NODE = `UPDATE nodes SET type = ?, os = ?, cpu = ?, core = ?, mem = ?,
 		disk = ?, uptime = ?, atime = datetime('now','localtime') WHERE id = ?;`
 
 	SQL_UPDATE_NODE_UPTIME = `UPDATE nodes SET uptime = ?, atime = datetime('now','localtime')
 		WHERE id = ?;`
-
-	SQL_SELECT_NODE_ID = `SELECT id FROM nodes WHERE addr = ?;`
 
 	SQL_SELECT_NODE_METRICS = `SELECT m.id, m.type, m.detector, b.params, m.md5 
 		FROM metrics AS m, metric_bindings AS b 
@@ -139,21 +131,16 @@ func (self *Vis) getNodeID(typ, addr, remote string) (node int64) {
 		}
 	}
 
-	err := self.db.QueryRow(SQL_SELECT_NODE_ID, addr).Scan(&node)
+	nodes := model.GetNodes()
+	err := nodes.GetIDFor(addr)
 
 	if err == sql.ErrNoRows {
 
-		result, e := self.db.Exec(SQL_NEW_NODE, addr, addr, typ)
+		n, e := nodes.Add(typ, addr)
+
 		check(e)
 
-		node, err = result.LastInsertId()
-		check(err)
-
-		_, err = self.db.Exec(SQL_NEW_DEFAULT_METRICS, node)
-
-		if err != nil {
-			log.Println("[WARN]", err)
-		}
+		node = n.ID
 
 	} else {
 		check(err)

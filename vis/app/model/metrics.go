@@ -6,15 +6,13 @@ import (
 )
 
 const (
-	SQL_SELECT_METRICS      = `SELECT id, name, type, detector, md5 FROM metrics;`
 	SQL_SELECT_METRIC_BY_ID = `SELECT id, name, type, detector, md5 FROM metrics WHERE id = ?;`
-	SQL_SELECT_METRICS_DFT  = `SELECT id, name, params, interval
-	                            FROM default_metrics AS d, metrics AS m
-	                           WHERE d.id = m.id;`
-	SQL_INSERT_METRIC      = `INSERT INTO metrics (name, type, detector, md5) VALUES(?,?,?,?);`
-	SQL_UPDATE_METRIC_NAME = `UPDATE metrics SET name = ? WHERE id = ?;`
-	SQL_UPDATE_METRIC      = `UPDATE metrics SET type = ?, detector = ?, md5 = ? WHERE id = ?;`
-	SQL_DELETE_METRIC      = `DELETE FROM metrics WHERE id = ?;`
+	SQL_SELECT_ALL_METRICS  = `SELECT id, name, type, detector, md5 FROM metrics;`
+	SQL_SELECT_DFT_METRICS  = `SELECT id, name, params, interval FROM default_metrics AS d, metrics AS m WHERE d.id = m.id;`
+	SQL_UPDATE_METRIC_NAME  = `UPDATE metrics SET name = ? WHERE id = ?;`
+	SQL_INSERT_METRIC       = `INSERT INTO metrics (name, type, detector, md5) VALUES(?,?,?,?);`
+	SQL_UPDATE_METRIC       = `UPDATE metrics SET name = ?, type = ?, detector = ?, md5 = ? WHERE id = ?;`
+	SQL_DELETE_METRIC       = `DELETE FROM metrics WHERE id = ?;`
 )
 
 type Metric struct {
@@ -43,13 +41,29 @@ func GetMetrics() *Metrics {
 
 func (self *Metric) Save() {
 
+	// update
+	if self.ID != 0 {
+		_, err = db.Exec(SQL_UPDATE_METRIC, self.Name, self.Type, self.Detector, self.MD5, self.ID)
+		return
+	}
+
+	// insert
+	result, err := db.Exec(SQL_INSERT_METRIC, self.Name, self.Type, self.Detector, self.MD5)
+
+	if err != nil {
+		return
+	}
+
+	self.ID, err = result.LastInsertId()
+
+	return
 }
 
 func (self *Metrics) All() (metrics map[int64]Metric, err error) {
 
 	metrics = make(map[int64]Metric)
 
-	rows, err := db.Query(SQL_SELECT_METRICS)
+	rows, err := db.Query(SQL_SELECT_ALL_METRICS)
 
 	if err != nil {
 		return
@@ -75,11 +89,11 @@ func (self *Metrics) All() (metrics map[int64]Metric, err error) {
 	return
 }
 
-func (self *Metrics) AllDefault() (dfts map[int64]DefaultMetric, err error) {
+func (self *Metrics) AllDefault() (defaults map[int64]DefaultMetric, err error) {
 
 	defaults = make(map[int64]DefaultMetric)
 
-	rows, err = db.Query(SQL_SELECT_METRICS_DEFAULT)
+	rows, err = db.Query(SQL_SELECT_DFT_METRICS)
 
 	if err != nil {
 		return
@@ -97,7 +111,7 @@ func (self *Metrics) AllDefault() (dfts map[int64]DefaultMetric, err error) {
 			return
 		}
 
-		self.defaults[metric.ID] = metric
+		defaults[metric.ID] = metric
 	}
 
 	err = rows.Err()
@@ -107,15 +121,13 @@ func (self *Metrics) AllDefault() (dfts map[int64]DefaultMetric, err error) {
 
 func (self *Metrics) Add(name, t, detector, md5 string) (metric Metric, err error) {
 
-	metric = Metric{Name: name, Type: t, Detector: detector, MD5: md5}
+	metric.Name = name
+	metric.Type = t
+	metric.Detector = detector
+	metric.MD5 = md5
 
-	result, err := db.Exec(SQL_INSERT_METRIC, name, t, detector, md5)
+	err = metric.Save()
 
-	if err != nil {
-		return
-	}
-
-	metric.ID, err = result.LastInsertId()
 	return
 }
 
@@ -184,8 +196,12 @@ func (self *Metrics) Del(id int64) (err error) {
 
 func (self *Metrics) Get(id int64) (metric Metric, err error) {
 
-	err = db.QueryRow(SQL_SELECT_METRIC_BY_ID, id).Scan(&metric.ID, &metric.Name,
-		&metric.Type, &metric.Detector, &metric.MD5)
+	err = db.QueryRow(SQL_SELECT_METRIC_BY_ID, id).Scan(
+		&metric.ID,
+		&metric.Name,
+		&metric.Type,
+		&metric.Detector,
+		&metric.MD5)
 
 	return
 }
